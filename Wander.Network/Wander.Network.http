@@ -1,0 +1,6 @@
+@Wander.Network_HostAddress = http://localhost:5205
+
+GET {{Wander.Network_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
