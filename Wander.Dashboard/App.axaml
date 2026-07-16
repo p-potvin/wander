@@ -4,39 +4,18 @@
              RequestedThemeVariant="Light">
 
     <Application.Resources>
-        <!-- vaultwares-revisited tokens (vaultwares-themes/vaultwares-revisited/TOKENS.md).
-             Console and warm coexist: warm is the structural frame (the desk),
-             console is the operational core (the screen). -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- vaultwares-themes/vaultwares-revisited/ports/avalonia — the shared token
+                     set. Do not hardcode hex values here; add new tokens upstream if missing. -->
+                <ResourceInclude Source="avares://Wander.Dashboard/Assets/VaultTokens.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
-        <!-- Warm mode: the frame -->
-        <SolidColorBrush x:Key="VaultWarmBg">#F5F1E8</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultWarmRaised">#FCFAF5</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultWarmMuted">#ECE5D8</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultWarmBorderSubtle">#14161320</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultInk">#161320</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultInkSecondary">#99161320</SolidColorBrush>
-
-        <!-- Console mode: the operational core -->
-        <SolidColorBrush x:Key="VaultConsoleBg">#0b0813</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultConsoleSurface">#13101c</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultConsoleRaised">#2A2340</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultConsoleElevated">#453763</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultConsoleText">#a394cc</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultConsoleTextSecondary">#B8EDE6FF</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultConsoleBorderSubtle">#0FFFFFFF</SolidColorBrush>
-
-        <!-- Brand accents -->
-        <SolidColorBrush x:Key="VaultConsoleGold">#D6A441</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultConsoleViolet">#B07CFF</SolidColorBrush>
-
-        <!-- Signal palette -->
-        <SolidColorBrush x:Key="VaultSignalOnline">#6BE675</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultSignalRelay">#55D6FF</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultSignalSync">#B07CFF</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultSignalWarning">#F0B94B</SolidColorBrush>
-        <SolidColorBrush x:Key="VaultSignalAlert">#FF6B7A</SolidColorBrush>
-
-        <FontFamily x:Key="VaultMono">JetBrains Mono, Cascadia Mono, Consolas, monospace</FontFamily>
+            <!-- Consumer-declared, per vaultwares-revisited/TOKENS.md: the warm-mode
+                 foreground ("ink") is not a shared revisited.css token. -->
+            <SolidColorBrush x:Key="VaultInk">#161320</SolidColorBrush>
+            <SolidColorBrush x:Key="VaultInkSecondary">#99161320</SolidColorBrush>
+        </ResourceDictionary>
     </Application.Resources>
 
     <Application.Styles>

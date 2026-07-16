@@ -43,12 +43,12 @@
                         <TextBlock x:Name="NodeName" Text="—" FontSize="17" FontWeight="SemiBold"
                                    Foreground="{StaticResource VaultInk}"/>
                         <TextBlock x:Name="NodeAddress" Text="—" FontSize="12"
-                                   FontFamily="{StaticResource VaultMono}"
+                                   FontFamily="{StaticResource VaultFontMono}"
                                    Foreground="{StaticResource VaultInkSecondary}"/>
                         <Rectangle Height="1" Fill="{StaticResource VaultWarmBorderSubtle}" Margin="0,8"/>
                         <TextBlock Text="Sync folder" FontSize="11" Foreground="{StaticResource VaultInkSecondary}"/>
                         <TextBlock x:Name="SyncRootText" Text="—" FontSize="11" TextWrapping="Wrap"
-                                   FontFamily="{StaticResource VaultMono}"
+                                   FontFamily="{StaticResource VaultFontMono}"
                                    Foreground="{StaticResource VaultInkSecondary}"/>
                         <TextBlock x:Name="FileCount" Text="—" FontSize="13" Margin="0,4,0,0"
                                    Foreground="{StaticResource VaultInk}"/>
@@ -67,7 +67,7 @@
                                         <Ellipse Width="8" Height="8" Fill="{StaticResource VaultSignalOnline}" VerticalAlignment="Center"/>
                                         <TextBlock Text="{Binding DisplayName}" Foreground="{StaticResource VaultInk}" FontSize="13"/>
                                         <TextBlock Text="{Binding Ip}" Foreground="{StaticResource VaultInkSecondary}" FontSize="11"
-                                                   FontFamily="{StaticResource VaultMono}" VerticalAlignment="Center"/>
+                                                   FontFamily="{StaticResource VaultFontMono}" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -111,7 +111,7 @@
                             <TextBlock DockPanel.Dock="Left" Text="ACTIVITY" FontSize="11" LetterSpacing="1.5"
                                        Foreground="{StaticResource VaultConsoleGold}" VerticalAlignment="Center"/>
                             <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" Text="live"
-                                       FontSize="11" FontFamily="{StaticResource VaultMono}"
+                                       FontSize="11" FontFamily="{StaticResource VaultFontMono}"
                                        Foreground="{StaticResource VaultSignalOnline}"/>
                         </DockPanel>
                         <ScrollViewer Grid.Row="1">
@@ -120,17 +120,17 @@
                                     <DataTemplate>
                                         <Grid ColumnDefinitions="60,68,*" Margin="0,3">
                                             <TextBlock Grid.Column="0" Text="{Binding Time}" FontSize="11"
-                                                       FontFamily="{StaticResource VaultMono}"
+                                                       FontFamily="{StaticResource VaultFontMono}"
                                                        Foreground="{StaticResource VaultConsoleText}"
                                                        VerticalAlignment="Top" Margin="0,1,0,0"/>
                                             <Border Grid.Column="1" Background="{StaticResource VaultConsoleRaised}" CornerRadius="4"
                                                     Padding="6,1" HorizontalAlignment="Left" VerticalAlignment="Top">
                                                 <TextBlock Text="{Binding Category}" FontSize="10"
-                                                           FontFamily="{StaticResource VaultMono}"
+                                                           FontFamily="{StaticResource VaultFontMono}"
                                                            Foreground="{StaticResource VaultConsoleGold}"/>
                                             </Border>
                                             <TextBlock Grid.Column="2" Text="{Binding Message}" FontSize="12" TextWrapping="Wrap"
-                                                       FontFamily="{StaticResource VaultMono}"
+                                                       FontFamily="{StaticResource VaultFontMono}"
                                                        Foreground="{StaticResource VaultConsoleTextSecondary}" Margin="8,1,0,0"/>
                                         </Grid>
                                     </DataTemplate>

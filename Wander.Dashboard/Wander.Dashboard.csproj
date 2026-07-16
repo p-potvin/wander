@@ -14,6 +14,11 @@
 
   <ItemGroup>
     <AvaloniaResource Include="Assets/**" />
+    <!-- Sourced from the vaultwares-themes submodule; not copied, just linked into
+         this assembly's avares:// tree so App.axaml can merge it. -->
+    <AvaloniaResource Include="..\vaultwares-themes\vaultwares-revisited\ports\avalonia\VaultTokens.axaml">
+      <Link>Assets/VaultTokens.axaml</Link>
+    </AvaloniaResource>
   </ItemGroup>
 
   <ItemGroup>
