@@ -9,7 +9,24 @@ using System.Threading.Tasks;
 
 namespace Wander.Network.Services
 {
-    public record TailscalePeer(string HostName, string DnsName, string Ip, bool Online);
+    public record TailscalePeer(string HostName, string DnsName, string Ip, bool Online)
+    {
+        /// <summary>
+        /// The name to show a human. HostName is self-reported by the device's OS and is
+        /// unreliable (an iPad reports "localhost"; a server named "greencloud-vps" in the
+        /// tailnet admin console can report its internal OS hostname "vaultwares" instead).
+        /// DNSName is Tailscale's own assigned name and matches what the admin console and
+        /// `tailscale status` show, so it's the name that matches VaultWares' naming convention.
+        /// </summary>
+        public string DisplayName
+        {
+            get
+            {
+                var label = DnsName.TrimEnd('.').Split('.')[0];
+                return !string.IsNullOrWhiteSpace(label) ? label : HostName;
+            }
+        }
+    }
 
     public record TailscaleIdentity(string LoginName, string NodeName);
 

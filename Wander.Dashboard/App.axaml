@@ -45,7 +45,7 @@
 
     <TrayIcon.Icons>
         <TrayIcons>
-            <TrayIcon Icon="/Assets/wander.ico" ToolTipText="VaultWares — Wander">
+            <TrayIcon Icon="/Assets/wander-gold.png" ToolTipText="VaultWares — Wander">
                 <TrayIcon.Menu>
                     <NativeMenu>
                         <NativeMenuItem Header="Open dashboard" Click="TrayOpen_Click"/>

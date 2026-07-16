@@ -3,7 +3,7 @@
         x:Class="Wander.Dashboard.MainWindow"
         Title="VaultWares — Wander"
         Width="920" Height="600"
-        Icon="/Assets/wander.ico"
+        Icon="/Assets/wander-gold.png"
         Background="{StaticResource VaultWarmBg}">
 
     <!-- Warm frame (the desk) wrapping the console core (the screen) -->
@@ -12,6 +12,7 @@
         <!-- Header: warm chrome -->
         <DockPanel Grid.Row="0" Margin="0,0,0,16">
             <StackPanel Orientation="Horizontal" Spacing="10" DockPanel.Dock="Left">
+                <Image Source="/Assets/wander-gold.png" Width="26" Height="26" VerticalAlignment="Center"/>
                 <TextBlock Text="VaultWares" FontSize="20" FontWeight="SemiBold"
                            Foreground="{StaticResource VaultInk}" VerticalAlignment="Center"/>
                 <Rectangle Width="2" Height="20" Fill="{StaticResource VaultConsoleGold}" VerticalAlignment="Center"/>
@@ -64,7 +65,7 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,3">
                                         <Ellipse Width="8" Height="8" Fill="{StaticResource VaultSignalOnline}" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding HostName}" Foreground="{StaticResource VaultInk}" FontSize="13"/>
+                                        <TextBlock Text="{Binding DisplayName}" Foreground="{StaticResource VaultInk}" FontSize="13"/>
                                         <TextBlock Text="{Binding Ip}" Foreground="{StaticResource VaultInkSecondary}" FontSize="11"
                                                    FontFamily="{StaticResource VaultMono}" VerticalAlignment="Center"/>
                                     </StackPanel>
@@ -105,8 +106,10 @@
                 <Border Background="{StaticResource VaultConsoleSurface}" CornerRadius="8" Padding="16">
                     <Grid RowDefinitions="Auto,*">
                         <DockPanel Grid.Row="0" Margin="0,0,0,10">
+                            <Image DockPanel.Dock="Left" Source="/Assets/wander-console.png" Width="16" Height="16"
+                                   Margin="0,0,8,0" VerticalAlignment="Center" Opacity="0.85"/>
                             <TextBlock DockPanel.Dock="Left" Text="ACTIVITY" FontSize="11" LetterSpacing="1.5"
-                                       Foreground="{StaticResource VaultConsoleGold}"/>
+                                       Foreground="{StaticResource VaultConsoleGold}" VerticalAlignment="Center"/>
                             <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right" Text="live"
                                        FontSize="11" FontFamily="{StaticResource VaultMono}"
                                        Foreground="{StaticResource VaultSignalOnline}"/>
