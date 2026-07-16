@@ -4,4 +4,5 @@
   <Project Path="Wander.UI/Wander.UI.csproj" />
   <Project Path="Wander.WindowsAPI/Wander.WindowsAPI.csproj" />
   <Project Path="Wander.Tests/Wander.Tests.csproj" />
+  <Project Path="Wander.Dashboard/Wander.Dashboard.csproj" />
 </Solution>

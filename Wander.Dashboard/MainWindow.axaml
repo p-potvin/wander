@@ -1,0 +1,103 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Wander.Dashboard.MainWindow"
+        Title="VaultWares — Wander"
+        Width="860" Height="560"
+        Background="{StaticResource VwBackground}">
+
+    <Grid Margin="20" RowDefinitions="Auto,*">
+
+        <!-- Header -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal" Spacing="10" DockPanel.Dock="Left">
+                <TextBlock Text="VaultWares" FontSize="20" FontWeight="SemiBold"
+                           Foreground="{StaticResource VwAccent}" VerticalAlignment="Center"/>
+                <TextBlock Text="|" FontSize="20" Foreground="{StaticResource VwMuted}" VerticalAlignment="Center"/>
+                <TextBlock Text="Wander" FontSize="20" FontWeight="Light"
+                           Foreground="{StaticResource VwText}" VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="{StaticResource VwMuted}" VerticalAlignment="Center"/>
+                <TextBlock x:Name="StatusText" Text="Starting…" Foreground="{StaticResource VwTextMuted}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Content -->
+        <Grid Grid.Row="1" ColumnDefinitions="320,16,*">
+
+            <!-- Left column: node + peers -->
+            <StackPanel Grid.Column="0" Spacing="16">
+
+                <Border Background="{StaticResource VwSurface}" CornerRadius="10" Padding="16"
+                        BorderBrush="{StaticResource VwBorder}" BorderThickness="1">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="THIS NODE" FontSize="11" LetterSpacing="1.5"
+                                   Foreground="{StaticResource VwTextMuted}"/>
+                        <TextBlock x:Name="NodeName" Text="—" FontSize="17" FontWeight="SemiBold"
+                                   Foreground="{StaticResource VwText}"/>
+                        <TextBlock x:Name="NodeAddress" Text="—" FontSize="12"
+                                   Foreground="{StaticResource VwTextSecondary}"/>
+                        <Rectangle Height="1" Fill="{StaticResource VwBorder}" Margin="0,8"/>
+                        <TextBlock Text="Sync folder" FontSize="11" Foreground="{StaticResource VwTextMuted}"/>
+                        <TextBlock x:Name="SyncRootText" Text="—" FontSize="12" TextWrapping="Wrap"
+                                   Foreground="{StaticResource VwTextSecondary}"/>
+                        <TextBlock x:Name="FileCount" Text="—" FontSize="13" Margin="0,4,0,0"
+                                   Foreground="{StaticResource VwText}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{StaticResource VwSurface}" CornerRadius="10" Padding="16"
+                        BorderBrush="{StaticResource VwBorder}" BorderThickness="1">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="TAILNET PEERS" FontSize="11" LetterSpacing="1.5"
+                                   Foreground="{StaticResource VwTextMuted}"/>
+                        <ItemsControl x:Name="PeersList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,3">
+                                        <Ellipse Width="8" Height="8" Fill="{StaticResource VwSuccess}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding HostName}" Foreground="{StaticResource VwText}" FontSize="13"/>
+                                        <TextBlock Text="{Binding Ip}" Foreground="{StaticResource VwTextMuted}" FontSize="11"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="NoPeersText" Text="No online peers found."
+                                   Foreground="{StaticResource VwTextMuted}" FontSize="12" IsVisible="False"/>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+
+            <!-- Right column: activity feed -->
+            <Border Grid.Column="2" Background="{StaticResource VwSurface}" CornerRadius="10" Padding="16"
+                    BorderBrush="{StaticResource VwBorder}" BorderThickness="1">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0" Text="ACTIVITY" FontSize="11" LetterSpacing="1.5"
+                               Foreground="{StaticResource VwTextMuted}" Margin="0,0,0,8"/>
+                    <ScrollViewer Grid.Row="1">
+                        <ItemsControl x:Name="ActivityList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="52,64,*" Margin="0,3">
+                                        <TextBlock Grid.Column="0" Text="{Binding Time}" FontSize="11"
+                                                   Foreground="{StaticResource VwTextMuted}" VerticalAlignment="Top" Margin="0,1,0,0"/>
+                                        <Border Grid.Column="1" Background="{StaticResource VwSurfaceElevated}" CornerRadius="4"
+                                                Padding="6,1" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                            <TextBlock Text="{Binding Category}" FontSize="10"
+                                                       Foreground="{StaticResource VwAccent}"/>
+                                        </Border>
+                                        <TextBlock Grid.Column="2" Text="{Binding Message}" FontSize="12" TextWrapping="Wrap"
+                                                   Foreground="{StaticResource VwTextSecondary}" Margin="8,1,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </Grid>
+</Window>

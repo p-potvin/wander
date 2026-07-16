@@ -1,8 +1,11 @@
 # Wander — Local Agent Ledger
 
-Stand-in for the shared `agent-ledger` (unreachable from this machine — lives under
-`C:\Users\Administrator\...`). Entries follow the same shape as
-`record-agent-change.ps1`. Migrate these into the real ledger when it's available.
+Historical stand-in for the shared `agent-ledger`. **Migrated 2026-07-16**: both entries
+below were recorded into the real ledger via the SMB share
+(`\\Clopeux-Desktop\Clopeux-Desktop C drive\...\agent-ledger`) as events
+`20260716-005711-564-wander-8ddd25a9` and `20260716-010006-974-wander-62a51f4f`.
+Future sessions should call `record-agent-change.ps1` over that share directly;
+this file remains as an in-repo mirror for continuity.
 
 ---
 

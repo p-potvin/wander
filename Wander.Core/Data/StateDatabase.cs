@@ -13,7 +13,9 @@ namespace Wander.Core.Data
 
         public StateDatabase(string dbPath)
         {
-            _connectionString = $"Data Source={dbPath}";
+            // Pooling off: connections are short-lived per call, and pooled handles keep
+            // the db file locked on Windows (blocks cleanup and cross-node test isolation).
+            _connectionString = $"Data Source={dbPath};Pooling=False";
         }
 
         public async Task InitializeAsync()

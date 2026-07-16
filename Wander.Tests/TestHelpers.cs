@@ -28,7 +28,6 @@ namespace Wander.Tests
 
         public void Dispose()
         {
-            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
             try { Directory.Delete(Path, recursive: true); } catch { /* best effort in temp */ }
         }
     }

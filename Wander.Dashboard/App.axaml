@@ -1,0 +1,27 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Wander.Dashboard.App"
+             RequestedThemeVariant="Dark">
+
+    <Application.Resources>
+        <!-- VaultWares "Golden Slate" (vaultwares-themes / Wander.UI.Theming) -->
+        <SolidColorBrush x:Key="VwBackground">#2E3538</SolidColorBrush>
+        <SolidColorBrush x:Key="VwSurface">#363D41</SolidColorBrush>
+        <SolidColorBrush x:Key="VwSurfaceAlt">#3F474C</SolidColorBrush>
+        <SolidColorBrush x:Key="VwSurfaceElevated">#485157</SolidColorBrush>
+        <SolidColorBrush x:Key="VwText">#EDE8DE</SolidColorBrush>
+        <SolidColorBrush x:Key="VwTextSecondary">#B8B1A5</SolidColorBrush>
+        <SolidColorBrush x:Key="VwTextMuted">#8FA0A8</SolidColorBrush>
+        <SolidColorBrush x:Key="VwAccent">#D4AF37</SolidColorBrush>
+        <SolidColorBrush x:Key="VwAccentMuted">#A8892A</SolidColorBrush>
+        <SolidColorBrush x:Key="VwBorder">#2ED4AF37</SolidColorBrush>
+        <SolidColorBrush x:Key="VwSuccess">#5BAD72</SolidColorBrush>
+        <SolidColorBrush x:Key="VwError">#E05C4A</SolidColorBrush>
+        <SolidColorBrush x:Key="VwInfo">#5B9FBF</SolidColorBrush>
+        <SolidColorBrush x:Key="VwMuted">#586672</SolidColorBrush>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+</Application>

@@ -10,7 +10,6 @@ using Microsoft.Extensions.Options;
 using Wander.Core.Data;
 using Wander.Core.Services;
 using Wander.Protocol;
-using Wander.WindowsAPI;
 
 namespace Wander.Network.Services
 {
@@ -26,6 +25,7 @@ namespace Wander.Network.Services
         private readonly SyncOrchestrator _orchestrator;
         private readonly TrashService _trash;
         private readonly TailscaleService _tailscale;
+        private readonly ActivityLog _activity;
         private readonly WanderOptions _options;
         private readonly ILogger<SyncDaemon> _logger;
 
@@ -38,6 +38,7 @@ namespace Wander.Network.Services
             SyncOrchestrator orchestrator,
             TrashService trash,
             TailscaleService tailscale,
+            ActivityLog activity,
             IOptions<WanderOptions> options,
             ILogger<SyncDaemon> logger)
         {
@@ -47,6 +48,7 @@ namespace Wander.Network.Services
             _orchestrator = orchestrator;
             _trash = trash;
             _tailscale = tailscale;
+            _activity = activity;
             _options = options.Value;
             _logger = logger;
         }
@@ -58,9 +60,13 @@ namespace Wander.Network.Services
             var scan = await _scanner.ScanAsync(stoppingToken);
             _logger.LogInformation("Initial scan: {Seen} files, {Added} new, {Updated} updated, {Tombstoned} tombstoned",
                 scan.FilesSeen, scan.Added, scan.Updated, scan.Tombstoned);
+            _activity.Add("scan", $"Indexed {scan.FilesSeen} files ({scan.Added} new, {scan.Updated} updated, {scan.Tombstoned} deleted)");
 
             var purged = _trash.PurgeExpired(DateTime.UtcNow);
             if (purged > 0) _logger.LogInformation("Purged {Count} expired trash batches", purged);
+
+            _indexer.StateChanged += (_, state) =>
+                _activity.Add("local", state.IsDeleted ? $"Deleted: {state.RelativePath}" : $"Changed: {state.RelativePath}");
 
             _watcher = new FolderWatcher(_options.SyncRoot);
             _watcher.FileCreated += (_, e) => _indexer.NotifyChanged(e.FullPath);
@@ -113,6 +119,8 @@ namespace Wander.Network.Services
                     if (summary.Downloaded + summary.Moved + summary.Conflicts + summary.Trashed + summary.Errors > 0)
                     {
                         _logger.LogInformation("Sync {Summary}", summary);
+                        _activity.Add("sync", $"From {summary.PeerName}: {summary.Downloaded} downloaded, {summary.Moved} moved, {summary.Conflicts} conflicts, {summary.Trashed} trashed" +
+                            (summary.Errors > 0 ? $", {summary.Errors} errors" : ""));
                     }
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)

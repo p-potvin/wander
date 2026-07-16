@@ -87,8 +87,8 @@ namespace Wander.Tests
 
             Assert.Equal(SyncAction.Downloaded, action);
             Assert.Equal("version 2", File.ReadAllText(path));
-            Assert.Single(Directory.GetFiles(_root.Path, "*", SearchOption.AllDirectories)
-                .Where(f => !f.Contains(PathUtils.WanderDirName)));
+            Assert.Single(Directory.GetFiles(_root.Path, "*", SearchOption.AllDirectories),
+                f => !f.Contains(PathUtils.WanderDirName));
         }
 
         [Fact]

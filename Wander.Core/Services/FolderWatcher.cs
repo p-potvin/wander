@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Wander.WindowsAPI
+namespace Wander.Core.Services
 {
     public class FolderWatcher : IDisposable
     {

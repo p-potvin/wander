@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Wander.Core\Wander.Core.csproj" />
-    <ProjectReference Include="..\Wander.WindowsAPI\Wander.WindowsAPI.csproj" />
   </ItemGroup>
 
 </Project>
