@@ -1,27 +1,59 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Wander.Dashboard.App"
-             RequestedThemeVariant="Dark">
+             RequestedThemeVariant="Light">
 
     <Application.Resources>
-        <!-- VaultWares "Golden Slate" (vaultwares-themes / Wander.UI.Theming) -->
-        <SolidColorBrush x:Key="VwBackground">#2E3538</SolidColorBrush>
-        <SolidColorBrush x:Key="VwSurface">#363D41</SolidColorBrush>
-        <SolidColorBrush x:Key="VwSurfaceAlt">#3F474C</SolidColorBrush>
-        <SolidColorBrush x:Key="VwSurfaceElevated">#485157</SolidColorBrush>
-        <SolidColorBrush x:Key="VwText">#EDE8DE</SolidColorBrush>
-        <SolidColorBrush x:Key="VwTextSecondary">#B8B1A5</SolidColorBrush>
-        <SolidColorBrush x:Key="VwTextMuted">#8FA0A8</SolidColorBrush>
-        <SolidColorBrush x:Key="VwAccent">#D4AF37</SolidColorBrush>
-        <SolidColorBrush x:Key="VwAccentMuted">#A8892A</SolidColorBrush>
-        <SolidColorBrush x:Key="VwBorder">#2ED4AF37</SolidColorBrush>
-        <SolidColorBrush x:Key="VwSuccess">#5BAD72</SolidColorBrush>
-        <SolidColorBrush x:Key="VwError">#E05C4A</SolidColorBrush>
-        <SolidColorBrush x:Key="VwInfo">#5B9FBF</SolidColorBrush>
-        <SolidColorBrush x:Key="VwMuted">#586672</SolidColorBrush>
+        <!-- vaultwares-revisited tokens (vaultwares-themes/vaultwares-revisited/TOKENS.md).
+             Console and warm coexist: warm is the structural frame (the desk),
+             console is the operational core (the screen). -->
+
+        <!-- Warm mode: the frame -->
+        <SolidColorBrush x:Key="VaultWarmBg">#F5F1E8</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultWarmRaised">#FCFAF5</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultWarmMuted">#ECE5D8</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultWarmBorderSubtle">#14161320</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultInk">#161320</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultInkSecondary">#99161320</SolidColorBrush>
+
+        <!-- Console mode: the operational core -->
+        <SolidColorBrush x:Key="VaultConsoleBg">#0b0813</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultConsoleSurface">#13101c</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultConsoleRaised">#2A2340</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultConsoleElevated">#453763</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultConsoleText">#a394cc</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultConsoleTextSecondary">#B8EDE6FF</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultConsoleBorderSubtle">#0FFFFFFF</SolidColorBrush>
+
+        <!-- Brand accents -->
+        <SolidColorBrush x:Key="VaultConsoleGold">#D6A441</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultConsoleViolet">#B07CFF</SolidColorBrush>
+
+        <!-- Signal palette -->
+        <SolidColorBrush x:Key="VaultSignalOnline">#6BE675</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultSignalRelay">#55D6FF</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultSignalSync">#B07CFF</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultSignalWarning">#F0B94B</SolidColorBrush>
+        <SolidColorBrush x:Key="VaultSignalAlert">#FF6B7A</SolidColorBrush>
+
+        <FontFamily x:Key="VaultMono">JetBrains Mono, Cascadia Mono, Consolas, monospace</FontFamily>
     </Application.Resources>
 
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>
+
+    <TrayIcon.Icons>
+        <TrayIcons>
+            <TrayIcon Icon="/Assets/wander.ico" ToolTipText="VaultWares — Wander">
+                <TrayIcon.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Open dashboard" Click="TrayOpen_Click"/>
+                        <NativeMenuItemSeparator/>
+                        <NativeMenuItem Header="Quit Wander" Click="TrayQuit_Click"/>
+                    </NativeMenu>
+                </TrayIcon.Menu>
+            </TrayIcon>
+        </TrayIcons>
+    </TrayIcon.Icons>
 </Application>

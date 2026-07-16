@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -17,6 +18,9 @@ namespace Wander.Dashboard
     public partial class MainWindow : Window
     {
         public record ActivityRow(string Time, string Category, string Message);
+
+        private static readonly IBrush SignalOnline = new SolidColorBrush(Color.Parse("#6BE675"));
+        private static readonly IBrush SignalAlert = new SolidColorBrush(Color.Parse("#FF6B7A"));
 
         private readonly StateDatabase _db;
         private readonly TailscaleService _tailscale;
@@ -56,6 +60,7 @@ namespace Wander.Dashboard
             {
                 var states = (await _db.GetAllStatesAsync()).ToList();
                 var peers = await _tailscale.GetOnlinePeersAsync();
+                var conflicts = FindConflictCopies();
                 var feed = _activity.Snapshot()
                     .Select(e => new ActivityRow(e.AtUtc.ToLocalTime().ToString("HH:mm:ss"), e.Category, e.Message))
                     .ToList();
@@ -63,28 +68,51 @@ namespace Wander.Dashboard
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     var live = states.Count(s => !s.IsDeleted);
-                    FileCount.Text = $"{live} files tracked · {FormatBytes(states.Where(s => !s.IsDeleted).Sum(s => s.SizeBytes))}";
+                    var bytes = FormatBytes(states.Where(s => !s.IsDeleted).Sum(s => s.SizeBytes));
+                    FileCount.Text = live == 1 ? $"1 file tracked · {bytes}" : $"{live} files tracked · {bytes}";
 
                     PeersList.ItemsSource = peers;
                     NoPeersText.IsVisible = peers.Count == 0;
 
+                    ConflictsList.ItemsSource = conflicts;
+                    NoConflictsText.IsVisible = conflicts.Count == 0;
+
                     ActivityList.ItemsSource = feed;
 
-                    StatusDot.Fill = new SolidColorBrush(Color.Parse("#5BAD72"));
-                    StatusText.Text = $"Watching · {peers.Count} peer(s) online";
+                    StatusDot.Fill = SignalOnline;
+                    StatusText.Text = peers.Count == 1 ? "Watching · 1 peer online" : $"Watching · {peers.Count} peers online";
                 });
             }
             catch (Exception ex)
             {
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    StatusDot.Fill = new SolidColorBrush(Color.Parse("#E05C4A"));
+                    StatusDot.Fill = SignalAlert;
                     StatusText.Text = $"Error: {ex.Message}";
                 });
             }
             finally
             {
                 _refreshing = false;
+            }
+        }
+
+        /// <summary>Unresolved conflict copies on disk, named by ConflictNaming ("name (conflict — node, date).ext").</summary>
+        private List<string> FindConflictCopies()
+        {
+            try
+            {
+                if (!Directory.Exists(_options.SyncRoot)) return [];
+                return Directory.EnumerateFiles(_options.SyncRoot, "*(conflict — *", SearchOption.AllDirectories)
+                    .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}.wander{Path.DirectorySeparatorChar}"))
+                    .Select(f => Path.GetRelativePath(_options.SyncRoot, f))
+                    .OrderBy(f => f)
+                    .Take(20)
+                    .ToList();
+            }
+            catch
+            {
+                return [];
             }
         }
 

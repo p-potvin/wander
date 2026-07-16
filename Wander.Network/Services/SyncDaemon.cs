@@ -60,7 +60,7 @@ namespace Wander.Network.Services
             var scan = await _scanner.ScanAsync(stoppingToken);
             _logger.LogInformation("Initial scan: {Seen} files, {Added} new, {Updated} updated, {Tombstoned} tombstoned",
                 scan.FilesSeen, scan.Added, scan.Updated, scan.Tombstoned);
-            _activity.Add("scan", $"Indexed {scan.FilesSeen} files ({scan.Added} new, {scan.Updated} updated, {scan.Tombstoned} deleted)");
+            _activity.Add("scan", $"Indexed {scan.FilesSeen} file{(scan.FilesSeen == 1 ? "" : "s")} ({scan.Added} new, {scan.Updated} updated, {scan.Tombstoned} deleted)");
 
             var purged = _trash.PurgeExpired(DateTime.UtcNow);
             if (purged > 0) _logger.LogInformation("Purged {Count} expired trash batches", purged);

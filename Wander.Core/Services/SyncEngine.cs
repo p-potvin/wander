@@ -32,13 +32,16 @@ namespace Wander.Core.Services
         private readonly string _syncRootPath;
         private readonly TrashService _trash;
         private readonly string _localNodeName;
+        private readonly ActivityLog? _activity;
 
-        public SyncEngine(StateDatabase db, string syncRootPath, TrashService trash, string localNodeName)
+        public SyncEngine(StateDatabase db, string syncRootPath, TrashService trash, string localNodeName,
+            ActivityLog? activity = null)
         {
             _db = db;
             _syncRootPath = syncRootPath;
             _trash = trash;
             _localNodeName = localNodeName;
+            _activity = activity;
         }
 
         public async Task<SyncAction> ProcessRemoteFileStateAsync(
@@ -66,6 +69,7 @@ namespace Wander.Core.Services
                     File.Move(oldPath, localPath);
                     await _db.UpsertFileStateAsync(remote);
                     Console.WriteLine($"[Sync] Moved: {localState.RelativePath} -> {remote.RelativePath}");
+                    _activity?.Add("move", $"{localState.RelativePath} → {remote.RelativePath}");
                     return SyncAction.Moved;
                 }
             }
@@ -106,6 +110,7 @@ namespace Wander.Core.Services
                 var conflictPath = ConflictNaming.BuildConflictPath(localPath, _localNodeName, DateTime.UtcNow);
                 File.Move(localPath, conflictPath);
                 Console.WriteLine($"[Conflict] Local edit preserved as: {Path.GetFileName(conflictPath)}");
+                _activity?.Add("conflict", $"{remote.RelativePath}: local edit preserved as {Path.GetFileName(conflictPath)}");
                 return await DownloadAsync(remote, localPath, openDownload, conflictCopy: true);
             }
 
@@ -136,6 +141,7 @@ namespace Wander.Core.Services
             var trashedTo = _trash.MoveToTrash(localPath, DateTime.UtcNow);
             await _db.UpsertFileStateAsync(remote);
             Console.WriteLine($"[Sync] Remote delete applied; preserved in trash: {trashedTo}");
+            _activity?.Add("trash", $"{remote.RelativePath}: deleted by peer, preserved in trash (30 days)");
             return SyncAction.Trashed;
         }
 
@@ -184,6 +190,7 @@ namespace Wander.Core.Services
             });
 
             Console.WriteLine($"[Sync] Downloaded: {remote.RelativePath}");
+            if (!conflictCopy) _activity?.Add("pull", $"{remote.RelativePath} ({remote.SizeBytes:N0} B)");
             return conflictCopy ? SyncAction.DownloadedWithConflictCopy : SyncAction.Downloaded;
         }
     }

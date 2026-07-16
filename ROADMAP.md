@@ -65,12 +65,18 @@ turns mocks into a working core, with tests, before any feature work.
 
 ## Phase 1 — Trustworthy MVP (daily-drive milestone)
 
-- [ ] Bidirectional 2-peer sync of a real working folder
-- [ ] Conflict copies with peer attribution + notifications
-- [ ] Avalonia dashboard: folder status, peer list, live activity feed, conflict browser
-- [ ] Tray icon: at-a-glance status, pause, recent activity
+- [x] Bidirectional 2-peer sync engine (verified over loopback gRPC; live two-machine run staged on clopeux-desktop, awaiting launch)
+- [x] Conflict copies with peer attribution; conflict browser card in the dashboard
+- [x] Avalonia dashboard in **vaultwares-revisited**: warm document frame (node, peers, conflicts) wrapping the console activity core (per-file pull/move/conflict/trash feed, mono)
+- [x] Tray icon (VaultWares mark): close-to-tray keeps the engine running; quit is explicit
+- [ ] Toast/notification when a conflict or remote delete lands
+- [ ] Pause syncing (tray + dashboard)
 - [ ] Installer + update channel (e.g. Velopack)
 - [ ] **Exit criterion: the maintainer daily-drives Wander for their own working files**
+
+> Brand note (2026-07-16): all UI follows `vaultwares-themes/vaultwares-revisited/`
+> (TOKENS.md / PHILOSOPHY.md). Console mode and warm mode coexist — console is the
+> operational core, warm is the structural frame. Golden Slate et al. are legacy.
 
 ## Phase 2 — The team release
 

@@ -45,7 +45,8 @@ namespace Wander.Network
             {
                 var options = sp.GetRequiredService<IOptions<WanderOptions>>().Value;
                 return new SyncEngine(sp.GetRequiredService<StateDatabase>(), options.SyncRoot,
-                    sp.GetRequiredService<TrashService>(), options.NodeName);
+                    sp.GetRequiredService<TrashService>(), options.NodeName,
+                    sp.GetRequiredService<ActivityLog>());
             });
             builder.Services.AddSingleton(sp =>
             {
