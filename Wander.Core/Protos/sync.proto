@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+option csharp_namespace = "Wander.Protocol";
+
+package sync;
+
+service SyncService {
+  // Verify peer is online and speaks a compatible protocol version
+  rpc Ping (PingRequest) returns (PingResponse);
+
+  // Stream the peer's full file manifest (live files and tombstones)
+  rpc ListFiles (ManifestRequest) returns (stream FileStateResponse);
+
+  // Ask peer for the state of a specific file by GUID
+  rpc GetFileState (StateQueryRequest) returns (FileStateResponse);
+
+  // Request to download a file from a peer, receiving it in chunks
+  rpc DownloadFile (DownloadRequest) returns (stream FileChunk);
+}
+
+message PingRequest {
+  int32 protocol_version = 1;
+  string node_name = 2;
+}
+
+message PingResponse {
+  string status = 1;
+  string node_name = 2;
+  int32 protocol_version = 3;
+}
+
+message ManifestRequest {
+  // Reserved for future filtering (per-folder ids, changed-since cursors)
+}
+
+message StateQueryRequest {
+  string guid = 1;
+}
+
+message FileStateResponse {
+  bool exists = 1;
+  string guid = 2;
+  string relative_path = 3;
+  int64 size_bytes = 4;
+  string last_modified = 5; // ISO 8601 (round-trip "o") UTC string
+  string hash = 6;
+  bool is_deleted = 7;
+}
+
+message DownloadRequest {
+  string guid = 1;
+}
+
+message FileChunk {
+  bytes data = 1;
+  int64 offset = 2;
+  bool is_final = 3;
+}

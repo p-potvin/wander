@@ -29,7 +29,8 @@ namespace Wander.Core.Data
                     LastModified TEXT NOT NULL,
                     Hash TEXT NOT NULL,
                     IsDeleted INTEGER NOT NULL DEFAULT 0
-                );";
+                );
+                CREATE INDEX IF NOT EXISTS IX_FileStates_RelativePath ON FileStates (RelativePath);";
 
             await connection.ExecuteAsync(createTableQuery);
         }
@@ -69,6 +70,13 @@ namespace Wander.Core.Data
             using var connection = new SqliteConnection(_connectionString);
             var query = "SELECT * FROM FileStates;";
             return await connection.QueryAsync<FileState>(query);
+        }
+
+        public async Task MarkDeletedAsync(string guid, System.DateTime whenUtc)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            var query = @"UPDATE FileStates SET IsDeleted = 1, LastModified = @WhenUtc WHERE Guid = @Guid;";
+            await connection.ExecuteAsync(query, new { Guid = guid, WhenUtc = whenUtc });
         }
     }
 }

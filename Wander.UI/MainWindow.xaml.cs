@@ -1,6 +1,6 @@
 using System;
 using System.Windows;
-using System.Windows.Media;
+using Wander.UI.Theming;
 
 namespace Wander.UI
 {
@@ -12,10 +12,9 @@ namespace Wander.UI
         public MainWindow()
         {
             InitializeComponent();
-            
-            // Read OS default theme from our WindowsAPI library (mocked directly here if not referenced yet)
-            // _isDarkTheme = Wander.WindowsAPI.RegistrySettingsManager.IsDarkModeEnabled();
-            
+
+            _isDarkTheme = Wander.WindowsAPI.RegistrySettingsManager.IsDarkModeEnabled();
+
             ApplyTheme();
             ApplyLanguage();
         }
@@ -47,20 +46,8 @@ namespace Wander.UI
 
         private void ApplyTheme()
         {
-            var app = Application.Current;
-            if (_isDarkTheme)
-            {
-                app.Resources["BackgroundBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#002B36"));
-                app.Resources["SurfaceBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#073642"));
-                app.Resources["TextBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FDF6E3"));
-            }
-            else
-            {
-                // Light mode (Codex Solar Light Revisited / Paper)
-                app.Resources["BackgroundBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FDF6E3"));
-                app.Resources["SurfaceBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FDFCF7"));
-                app.Resources["TextBrush"] = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#002B36"));
-            }
+            var theme = ThemeManager.GetTheme(_isDarkTheme ? "Golden Slate" : "Solarized Light Revisited");
+            WpfThemeApplier.Apply(theme);
         }
 
         private void ApplyLanguage()

@@ -9,20 +9,19 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.72" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.7" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="..\Wander.Network\Protos\sync.proto" GrpcServices="Client" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <!-- Pinned above the vulnerable 2.1.11 native lib (GHSA-2m69-gcr7-jv3q) -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
     <PackageReference Include="Google.Protobuf" Version="3.34.1" />
     <PackageReference Include="Grpc.Net.Client" Version="2.80.0" />
     <PackageReference Include="Grpc.Tools" Version="2.80.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Single owner of the wire protocol: generates both client and server types -->
+    <Protobuf Include="Protos\sync.proto" GrpcServices="Both" />
   </ItemGroup>
 
 </Project>

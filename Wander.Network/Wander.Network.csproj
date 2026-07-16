@@ -8,15 +8,11 @@
 
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.80.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Wander.Core\Wander.Core.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="Protos\sync.proto" GrpcServices="Server" />
+    <ProjectReference Include="..\Wander.WindowsAPI\Wander.WindowsAPI.csproj" />
   </ItemGroup>
 
 </Project>
