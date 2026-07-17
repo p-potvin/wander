@@ -145,6 +145,8 @@ namespace Wander.Core.Services
             return SyncAction.Trashed;
         }
 
+        private const int DownloadAttempts = 3;
+
         private async Task<SyncAction> DownloadAsync(
             FileState remote,
             string localPath,
@@ -154,25 +156,36 @@ namespace Wander.Core.Services
             if (openDownload == null) return SyncAction.None;
 
             Directory.CreateDirectory(Path.GetDirectoryName(localPath)!);
-
-            // Stream to a temp file first so a dropped connection never leaves a torn file in place.
             var tempPath = localPath + ".wander-tmp";
-            using (var call = openDownload())
-            await using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true))
+            string? receivedHash = null;
+
+            // A brand-new file can still be mid-write when the sender indexes it, so the
+            // manifest's hash can be momentarily stale. Retry a few times (the sender
+            // re-hashes from disk on every request) before giving up and surfacing it.
+            for (var attempt = 1; attempt <= DownloadAttempts; attempt++)
             {
-                await foreach (var chunk in call.ResponseStream.ReadAllAsync())
+                // Stream to a temp file first so a dropped connection never leaves a torn file in place.
+                using (var call = openDownload())
+                await using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true))
                 {
-                    await fs.WriteAsync(chunk.Data.Memory);
-                    if (chunk.IsFinal) break;
+                    await foreach (var chunk in call.ResponseStream.ReadAllAsync())
+                    {
+                        await fs.WriteAsync(chunk.Data.Memory);
+                        if (chunk.IsFinal) break;
+                    }
                 }
+
+                receivedHash = HashHelper.ComputeFileHash(tempPath);
+                if (receivedHash == remote.Hash) break;
+
+                if (attempt < DownloadAttempts) await Task.Delay(TimeSpan.FromSeconds(attempt));
             }
 
-            // Guardrail: verify what we received is what the manifest promised.
-            var receivedHash = HashHelper.ComputeFileHash(tempPath);
             if (receivedHash != remote.Hash)
             {
                 File.Delete(tempPath);
-                Console.WriteLine($"[Sync] Discarded '{remote.RelativePath}': hash mismatch after download (peer file changed mid-transfer?). Will retry next round.");
+                Console.WriteLine($"[Sync] Discarded '{remote.RelativePath}': hash mismatch after {DownloadAttempts} attempts.");
+                _activity?.Add("error", $"{remote.RelativePath}: download didn't verify after {DownloadAttempts} tries, will retry next sync round");
                 return SyncAction.SkippedFailedVerification;
             }
 

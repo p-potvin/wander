@@ -30,6 +30,7 @@ namespace Wander.Network.Services
         private readonly ILogger<SyncDaemon> _logger;
 
         private FolderWatcher? _watcher;
+        private int _quietRounds;
 
         public SyncDaemon(
             StateDatabase db,
@@ -77,10 +78,26 @@ namespace Wander.Network.Services
             _logger.LogInformation("Watching {Root}", _options.SyncRoot);
 
             var interval = TimeSpan.FromSeconds(Math.Max(5, _options.PullIntervalSeconds));
+            // Live watcher events are the fast path; this is the safety net in case one is
+            // ever missed (locked files, buffer overflows) — without it, a file the watcher
+            // dropped would never get indexed again until the process restarts.
+            var rescanEvery = TimeSpan.FromMinutes(2);
+            var nextRescan = DateTime.UtcNow + rescanEvery;
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
+                    if (DateTime.UtcNow >= nextRescan)
+                    {
+                        nextRescan = DateTime.UtcNow + rescanEvery;
+                        var rescan = await _scanner.ScanAsync(stoppingToken);
+                        if (rescan.Added + rescan.Updated + rescan.Tombstoned > 0)
+                        {
+                            _activity.Add("scan", $"Re-scan caught {rescan.Added} new, {rescan.Updated} updated, {rescan.Tombstoned} deleted (missed by the live watcher)");
+                        }
+                    }
+
                     await RunSyncRoundAsync(stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -106,6 +123,9 @@ namespace Wander.Network.Services
                 addresses.Add($"http://{peer.Ip}:{_options.Port}");
             }
 
+            var reached = new List<PullSummary>();
+            var unreachable = 0;
+
             foreach (var address in addresses.Distinct())
             {
                 ct.ThrowIfCancellationRequested();
@@ -115,20 +135,50 @@ namespace Wander.Network.Services
                     using var channel = GrpcChannel.ForAddress(address);
                     var client = new SyncService.SyncServiceClient(channel);
                     var summary = await _orchestrator.PullFromPeerAsync(client, ct);
+                    reached.Add(summary);
 
-                    if (summary.Downloaded + summary.Moved + summary.Conflicts + summary.Trashed + summary.Errors > 0)
+                    if (summary.Downloaded + summary.Moved + summary.Conflicts + summary.Trashed + summary.VerificationFailed + summary.Errors > 0)
                     {
                         _logger.LogInformation("Sync {Summary}", summary);
-                        _activity.Add("sync", $"From {summary.PeerName}: {summary.Downloaded} downloaded, {summary.Moved} moved, {summary.Conflicts} conflicts, {summary.Trashed} trashed" +
-                            (summary.Errors > 0 ? $", {summary.Errors} errors" : ""));
                     }
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    // Peers without Wander (or asleep) are normal on a tailnet; keep it quiet.
+                    // Peers without Wander (or asleep) are normal on a tailnet; keep it quiet in the log...
+                    unreachable++;
                     _logger.LogDebug("Peer {Address} unreachable: {Message}", address, ex.Message);
                 }
             }
+
+            // ...but always leave a trace in the activity feed, even a "checked, nothing changed"
+            // round — otherwise a WinExe app with no console gives the user zero signal at all.
+            if (reached.Count == 0 && unreachable == 0) return; // no peers configured/discovered yet
+
+            var changed = reached.Sum(s => s.Downloaded + s.Moved + s.Conflicts + s.Trashed);
+            var verificationFailed = reached.Sum(s => s.VerificationFailed);
+            var quiet = changed == 0 && verificationFailed == 0;
+
+            if (quiet)
+            {
+                _quietRounds++;
+                // Show the first "nothing changed" round immediately for reassurance, then
+                // only every 4th (~1/min at the default interval) so it doesn't drown real events.
+                if (_quietRounds != 1 && _quietRounds % 4 != 0) return;
+            }
+            else
+            {
+                _quietRounds = 0;
+            }
+
+            var message = reached.Count == 0
+                ? $"No peers reachable ({unreachable} tried)"
+                : quiet
+                    ? $"Checked {reached.Count} peer{(reached.Count == 1 ? "" : "s")} ({string.Join(", ", reached.Select(s => s.PeerName))}) — up to date"
+                    : string.Join("; ", reached.Where(s => s.Downloaded + s.Moved + s.Conflicts + s.Trashed + s.VerificationFailed > 0)
+                        .Select(s => $"{s.PeerName}: {s.Downloaded} downloaded, {s.Moved} moved, {s.Conflicts} conflicts, {s.Trashed} trashed" +
+                            (s.VerificationFailed > 0 ? $", {s.VerificationFailed} unverified" : "")));
+
+            _activity.Add("sync", message);
         }
 
         public override void Dispose()

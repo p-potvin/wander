@@ -15,11 +15,12 @@ namespace Wander.Core.Services
         public int Conflicts { get; set; }
         public int Trashed { get; set; }
         public int Moved { get; set; }
+        public int VerificationFailed { get; set; }
         public int Errors { get; set; }
 
         public override string ToString() =>
             $"pull from {PeerName}: {FilesConsidered} considered, {Downloaded} downloaded, {Moved} moved, " +
-            $"{Conflicts} conflicts, {Trashed} trashed, {Errors} errors";
+            $"{Conflicts} conflicts, {Trashed} trashed, {VerificationFailed} unverified, {Errors} errors";
     }
 
     /// <summary>
@@ -76,6 +77,7 @@ namespace Wander.Core.Services
                         case SyncAction.DownloadedWithConflictCopy: summary.Downloaded++; summary.Conflicts++; break;
                         case SyncAction.Moved: summary.Moved++; break;
                         case SyncAction.Trashed: summary.Trashed++; break;
+                        case SyncAction.SkippedFailedVerification: summary.VerificationFailed++; break;
                     }
                 }
                 catch (OperationCanceledException) { throw; }

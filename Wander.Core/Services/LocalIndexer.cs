@@ -132,7 +132,9 @@ namespace Wander.Core.Services
             }
             catch (IOException)
             {
-                // File still locked by the writing process; the next change event retries.
+                // File still locked by the writer. Don't rely on another watcher event
+                // arriving (some writers only fire once) — reschedule ourselves.
+                ScheduleReconcile(localPath);
                 return;
             }
 
