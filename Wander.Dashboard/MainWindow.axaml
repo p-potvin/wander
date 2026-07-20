@@ -19,15 +19,23 @@
                 <TextBlock Text="Wander" FontSize="20" FontWeight="Light"
                            Foreground="{StaticResource VaultInkSecondary}" VerticalAlignment="Center"/>
             </StackPanel>
-            <Border DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center"
-                    Background="{StaticResource VaultWarmRaised}" BorderBrush="{StaticResource VaultWarmBorderSubtle}"
-                    BorderThickness="1" CornerRadius="12" Padding="10,4">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <Ellipse x:Name="StatusDot" Width="9" Height="9" Fill="{StaticResource VaultWarmMuted}" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="StatusText" Text="Starting…" FontSize="12"
-                               Foreground="{StaticResource VaultInkSecondary}" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Border>
+            <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="10">
+                <Button x:Name="PauseButton" Click="Pause_Click" VerticalAlignment="Center"
+                        Background="{StaticResource VaultWarmRaised}" BorderBrush="{StaticResource VaultWarmBorderSubtle}"
+                        BorderThickness="1" CornerRadius="12" Padding="12,5"
+                        Foreground="{StaticResource VaultInk}">
+                    <TextBlock x:Name="PauseButtonText" Text="Pause" FontSize="12"/>
+                </Button>
+                <Border VerticalAlignment="Center"
+                        Background="{StaticResource VaultWarmRaised}" BorderBrush="{StaticResource VaultWarmBorderSubtle}"
+                        BorderThickness="1" CornerRadius="12" Padding="10,4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse x:Name="StatusDot" Width="9" Height="9" Fill="{StaticResource VaultWarmMuted}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="StatusText" Text="Starting…" FontSize="12"
+                                   Foreground="{StaticResource VaultInkSecondary}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
         </DockPanel>
 
         <Grid Grid.Row="1" ColumnDefinitions="320,16,*">

@@ -69,8 +69,9 @@ turns mocks into a working core, with tests, before any feature work.
 - [x] Conflict copies with peer attribution; conflict browser card in the dashboard
 - [x] Avalonia dashboard in **vaultwares-revisited**: warm document frame (node, peers, conflicts) wrapping the console activity core (per-file pull/move/conflict/trash feed, mono)
 - [x] Tray icon (VaultWares mark): close-to-tray keeps the engine running; quit is explicit
-- [ ] Toast/notification when a conflict or remote delete lands
-- [ ] Pause syncing (tray + dashboard)
+- [x] Pause syncing (`SyncController`): paused node stops pulling *and* stops advertising its manifest, so it goes silent both directions while the local watcher keeps indexing for instant resume. Tray toggle + dashboard button, kept in sync. Integration-tested.
+- [x] In-app notifications when a conflict / remote delete / sync error lands (Avalonia `WindowNotificationManager`, bottom-right toasts)
+- [ ] OS-level toasts that show when minimized to tray — deferred until the installer exists: real Windows Action Center toasts need a registered AppUserModelID, which the Velopack Start-Menu shortcut provides. In-app toasts cover the window-open case today.
 - [ ] Installer + update channel (e.g. Velopack)
 - [ ] **Exit criterion: the maintainer daily-drives Wander for their own working files**
 

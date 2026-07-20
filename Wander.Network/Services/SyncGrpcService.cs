@@ -16,11 +16,13 @@ namespace Wander.Network.Services
         private const int ChunkSizeBytes = 64 * 1024;
 
         private readonly StateDatabase _db;
+        private readonly Wander.Core.Services.SyncController _controller;
         private readonly WanderOptions _options;
 
-        public SyncGrpcService(StateDatabase db, IOptions<WanderOptions> options)
+        public SyncGrpcService(StateDatabase db, Wander.Core.Services.SyncController controller, IOptions<WanderOptions> options)
         {
             _db = db;
+            _controller = controller;
             _options = options.Value;
         }
 
@@ -37,6 +39,9 @@ namespace Wander.Network.Services
         public override async Task ListFiles(ManifestRequest request,
             IServerStreamWriter<FileStateResponse> responseStream, ServerCallContext context)
         {
+            // Paused nodes advertise nothing, so peers pulling from us see no changes.
+            if (_controller.IsPaused) return;
+
             foreach (var state in await _db.GetAllStatesAsync())
             {
                 context.CancellationToken.ThrowIfCancellationRequested();

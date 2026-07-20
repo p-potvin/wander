@@ -53,6 +53,7 @@ namespace Wander.Tests
             builder.Logging.ClearProviders();
             builder.Services.AddGrpc();
             builder.Services.AddSingleton(_dbA);
+            builder.Services.AddSingleton<SyncController>(); // node A is never paused in these tests
             builder.Services.Configure<WanderOptions>(o =>
             {
                 o.SyncRoot = _rootA.Path;
@@ -151,6 +152,25 @@ namespace Wander.Tests
             var received = Path.Combine(_rootB.Path, "empty.txt");
             Assert.True(File.Exists(received));
             Assert.Equal(0, new FileInfo(received).Length);
+        }
+
+        [Fact]
+        public async Task PausedNodeAdvertisesNothing()
+        {
+            _rootA.WriteFile("secret.txt", "should not leave a paused node");
+            await _scannerA.ScanAsync();
+
+            var controllerA = _nodeA.Services.GetRequiredService<SyncController>();
+            controllerA.Pause();
+
+            var whilePaused = await _orchestratorB.PullFromPeerAsync(_clientToA);
+            Assert.Equal(0, whilePaused.FilesConsidered);
+            Assert.False(File.Exists(Path.Combine(_rootB.Path, "secret.txt")));
+
+            controllerA.Resume();
+            var afterResume = await _orchestratorB.PullFromPeerAsync(_clientToA);
+            Assert.Equal(1, afterResume.Downloaded);
+            Assert.True(File.Exists(Path.Combine(_rootB.Path, "secret.txt")));
         }
     }
 }

@@ -30,6 +30,7 @@ namespace Wander.Network
 
             // A node is one sync root + one state db + one engine; everything is a singleton.
             builder.Services.AddSingleton<ActivityLog>();
+            builder.Services.AddSingleton<SyncController>();
             builder.Services.AddSingleton(sp =>
             {
                 var options = sp.GetRequiredService<IOptions<WanderOptions>>().Value;

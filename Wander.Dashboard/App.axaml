@@ -28,6 +28,7 @@
                 <TrayIcon.Menu>
                     <NativeMenu>
                         <NativeMenuItem Header="Open dashboard" Click="TrayOpen_Click"/>
+                        <NativeMenuItem Header="Pause syncing" Click="TrayPause_Click"/>
                         <NativeMenuItemSeparator/>
                         <NativeMenuItem Header="Quit Wander" Click="TrayQuit_Click"/>
                     </NativeMenu>

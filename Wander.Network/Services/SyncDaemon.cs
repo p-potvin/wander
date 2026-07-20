@@ -26,6 +26,7 @@ namespace Wander.Network.Services
         private readonly TrashService _trash;
         private readonly TailscaleService _tailscale;
         private readonly ActivityLog _activity;
+        private readonly SyncController _controller;
         private readonly WanderOptions _options;
         private readonly ILogger<SyncDaemon> _logger;
 
@@ -40,6 +41,7 @@ namespace Wander.Network.Services
             TrashService trash,
             TailscaleService tailscale,
             ActivityLog activity,
+            SyncController controller,
             IOptions<WanderOptions> options,
             ILogger<SyncDaemon> logger)
         {
@@ -50,6 +52,7 @@ namespace Wander.Network.Services
             _trash = trash;
             _tailscale = tailscale;
             _activity = activity;
+            _controller = controller;
             _options = options.Value;
             _logger = logger;
         }
@@ -68,6 +71,9 @@ namespace Wander.Network.Services
 
             _indexer.StateChanged += (_, state) =>
                 _activity.Add("local", state.IsDeleted ? $"Deleted: {state.RelativePath}" : $"Changed: {state.RelativePath}");
+
+            _controller.PausedChanged += (_, paused) =>
+                _activity.Add("pause", paused ? "Syncing paused — this node is silent until resumed" : "Syncing resumed");
 
             _watcher = new FolderWatcher(_options.SyncRoot);
             _watcher.FileCreated += (_, e) => _indexer.NotifyChanged(e.FullPath);
@@ -88,17 +94,26 @@ namespace Wander.Network.Services
             {
                 try
                 {
-                    if (DateTime.UtcNow >= nextRescan)
+                    // Paused: local indexing (watcher) keeps running so resume is instant,
+                    // but we neither pull from peers nor advertise to them.
+                    if (_controller.IsPaused)
                     {
-                        nextRescan = DateTime.UtcNow + rescanEvery;
-                        var rescan = await _scanner.ScanAsync(stoppingToken);
-                        if (rescan.Added + rescan.Updated + rescan.Tombstoned > 0)
-                        {
-                            _activity.Add("scan", $"Re-scan caught {rescan.Added} new, {rescan.Updated} updated, {rescan.Tombstoned} deleted (missed by the live watcher)");
-                        }
+                        _quietRounds = 0;
                     }
+                    else
+                    {
+                        if (DateTime.UtcNow >= nextRescan)
+                        {
+                            nextRescan = DateTime.UtcNow + rescanEvery;
+                            var rescan = await _scanner.ScanAsync(stoppingToken);
+                            if (rescan.Added + rescan.Updated + rescan.Tombstoned > 0)
+                            {
+                                _activity.Add("scan", $"Re-scan caught {rescan.Added} new, {rescan.Updated} updated, {rescan.Tombstoned} deleted (missed by the live watcher)");
+                            }
+                        }
 
-                    await RunSyncRoundAsync(stoppingToken);
+                        await RunSyncRoundAsync(stoppingToken);
+                    }
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
