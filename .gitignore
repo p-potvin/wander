@@ -2,6 +2,8 @@ bin/
 obj/
 .omx/
 dist/
+artifacts/
+releases/
 *.db
 *.db-shm
 *.db-wal

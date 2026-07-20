@@ -89,11 +89,14 @@ namespace Wander.Dashboard
 
         private void OnActivityEntryAdded(object? sender, ActivityEntry entry)
         {
+            // Only ready-to-apply updates (not the "downloading…" line) deserve a toast.
+            var isUpdateReady = entry.Category == "update" && entry.Message.Contains("ready");
             var (title, type) = entry.Category switch
             {
                 "conflict" => ("Sync conflict", NotificationType.Warning),
                 "trash" => ("File removed by a peer", NotificationType.Warning),
                 "error" => ("Sync problem", NotificationType.Error),
+                "update" when isUpdateReady => ("Update ready", NotificationType.Information),
                 _ => (null, NotificationType.Information)
             };
             if (title == null) return;

@@ -29,6 +29,12 @@ namespace Wander.Network
 
         public int TrashRetentionDays { get; set; } = 30;
 
+        /// <summary>
+        /// Velopack update feed (a URL or local/UNC path to the release folder). When empty,
+        /// auto-update is disabled — useful for dev runs and until a release feed is published.
+        /// </summary>
+        public string UpdateUrl { get; set; } = string.Empty;
+
         public string ResolvedDbPath => string.IsNullOrWhiteSpace(DbPath)
             ? System.IO.Path.Combine(SyncRoot, ".wander", "state.db")
             : DbPath;

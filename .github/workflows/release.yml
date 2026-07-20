@@ -1,0 +1,45 @@
+name: Release
+
+# Tag a commit `v0.1.0` (etc.) and push the tag to cut a release:
+#   git tag v0.1.0 && git push origin v0.1.0
+# Produces the Velopack installer + update feed and attaches them to a GitHub
+# Release, which doubles as the app's auto-update source (WanderOptions.UpdateUrl
+# set to this repo's URL).
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install Velopack tool
+        run: dotnet tool install -g vpk
+
+      - name: Derive version from tag
+        id: ver
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Pack installer + update feed
+        shell: pwsh
+        run: ./scripts/pack.ps1 -Version ${{ steps.ver.outputs.version }}
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: releases/*
+          fail_on_unmatched_files: true

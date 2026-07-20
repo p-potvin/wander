@@ -1,8 +1,10 @@
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Wander.Core.Services;
 
@@ -13,6 +15,7 @@ namespace Wander.Dashboard
         private MainWindow? _mainWindow;
         private SyncController? _controller;
         private NativeMenuItem? _trayPauseItem;
+        private NativeMenuItem? _trayUpdateItem;
 
         public override void Initialize()
         {
@@ -22,11 +25,18 @@ namespace Wander.Dashboard
         public override void OnFrameworkInitializationCompleted()
         {
             _controller = Program.Node.Services.GetRequiredService<SyncController>();
-            _trayPauseItem = FindTrayPauseItem();
+            _trayPauseItem = FindTrayItem("Pause", "Resume");
+            _trayUpdateItem = FindTrayItem("update");
 
             _controller.PausedChanged += (_, paused) =>
-                Avalonia.Threading.Dispatcher.UIThread.Post(() => ReflectTrayPause(paused));
+                Dispatcher.UIThread.Post(() => ReflectTrayPause(paused));
             ReflectTrayPause(_controller.IsPaused);
+
+            Program.Updates.UpdateReady += (_, _) =>
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (_trayUpdateItem != null) _trayUpdateItem.IsVisible = true;
+                });
 
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
@@ -47,20 +57,16 @@ namespace Wander.Dashboard
             base.OnFrameworkInitializationCompleted();
         }
 
-        // x:Name on a NativeMenuItem isn't reachable via FindControl; walk the tray menu instead.
-        private NativeMenuItem? FindTrayPauseItem()
+        // x:Name on a NativeMenuItem isn't supported, so match tray items by header text.
+        private NativeMenuItem? FindTrayItem(params string[] headerContains)
         {
             var icons = TrayIcon.GetIcons(this);
             var menu = icons is { Count: > 0 } ? icons[0].Menu : null;
             if (menu == null) return null;
-            foreach (var item in menu.Items)
-            {
-                if (item is NativeMenuItem m && (m.Header?.Contains("Pause") == true || m.Header?.Contains("Resume") == true))
-                {
-                    return m;
-                }
-            }
-            return null;
+            return menu.Items
+                .OfType<NativeMenuItem>()
+                .FirstOrDefault(m => m.Header != null &&
+                    headerContains.Any(h => m.Header.Contains(h, StringComparison.OrdinalIgnoreCase)));
         }
 
         private void ReflectTrayPause(bool paused)
@@ -82,6 +88,11 @@ namespace Wander.Dashboard
         private void TrayPause_Click(object? sender, EventArgs e)
         {
             _controller?.Toggle(); // ReflectTrayPause runs via PausedChanged
+        }
+
+        private void TrayUpdate_Click(object? sender, EventArgs e)
+        {
+            Program.Updates.ApplyAndRestart();
         }
 
         private void TrayQuit_Click(object? sender, EventArgs e)

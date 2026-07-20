@@ -71,8 +71,9 @@ turns mocks into a working core, with tests, before any feature work.
 - [x] Tray icon (VaultWares mark): close-to-tray keeps the engine running; quit is explicit
 - [x] Pause syncing (`SyncController`): paused node stops pulling *and* stops advertising its manifest, so it goes silent both directions while the local watcher keeps indexing for instant resume. Tray toggle + dashboard button, kept in sync. Integration-tested.
 - [x] In-app notifications when a conflict / remote delete / sync error lands (Avalonia `WindowNotificationManager`, bottom-right toasts)
-- [ ] OS-level toasts that show when minimized to tray — deferred until the installer exists: real Windows Action Center toasts need a registered AppUserModelID, which the Velopack Start-Menu shortcut provides. In-app toasts cover the window-open case today.
-- [ ] Installer + update channel (e.g. Velopack)
+- [x] Installer + auto-update (Velopack): `scripts/pack.ps1` produces `VaultWaresWander-win-Setup.exe` + an update feed; `UpdateService` checks on startup, downloads in the background, and offers "restart to apply" via tray + toast (never restarts sync out from under you). Feed source is a plain URL/UNC path *or* a GitHub repo (uses the Releases feed). `.github/workflows/release.yml` cuts a release on a `v*` tag. Verified: `vpk pack` builds the setup bundle and confirms the `VelopackApp.Run()` hook.
+- [ ] Code-sign the installer (currently unsigned → SmartScreen warns). Needs a cert; wire `--signParams` into `pack.ps1`.
+- [ ] OS-level toasts when minimized to tray — now *unblocked* by the installer (the Velopack Start-Menu shortcut registers the AppUserModelID that Windows Action Center toasts require). In-app toasts cover the window-open case today.
 - [ ] **Exit criterion: the maintainer daily-drives Wander for their own working files**
 
 > Brand note (2026-07-16): all UI follows `vaultwares-themes/vaultwares-revisited/`
