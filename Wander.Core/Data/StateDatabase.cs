@@ -93,6 +93,23 @@ namespace Wander.Core.Data
             await connection.ExecuteAsync(query, new { Guid = guid, WhenUtc = whenUtc });
         }
 
+        /// <summary>Hard-removes a state row (used by same-path duplicate merge — not a tombstone,
+        /// so it does not propagate as a delete).</summary>
+        public async Task DeleteStateAsync(string guid)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.ExecuteAsync("DELETE FROM FileStates WHERE Guid = @Guid;", new { Guid = guid });
+        }
+
+        /// <summary>Moves a file's version history from one GUID to another (duplicate merge).</summary>
+        public async Task ReassignVersionsAsync(string fromGuid, string toGuid)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.ExecuteAsync(
+                "UPDATE FileVersions SET Guid = @To WHERE Guid = @From;",
+                new { From = fromGuid, To = toGuid });
+        }
+
         // --- Version history ---
 
         public async Task<long> AddVersionAsync(FileVersion version)

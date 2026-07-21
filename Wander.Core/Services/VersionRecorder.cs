@@ -23,7 +23,7 @@ namespace Wander.Core.Services
         private readonly IRetentionPolicy _retention;
         private readonly int _maxVersionsPerFile;
 
-        public VersionRecorder(StateDatabase db, VersionStore store, IRetentionPolicy retention, int maxVersionsPerFile = 20)
+        public VersionRecorder(StateDatabase db, VersionStore store, IRetentionPolicy retention, int maxVersionsPerFile = 10)
         {
             _db = db;
             _store = store;

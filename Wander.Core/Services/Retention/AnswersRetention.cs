@@ -13,20 +13,21 @@ namespace Wander.Core.Services.Retention
     /// very newest and very oldest are always preserved while the middle is thinned. The intent
     /// is to stretch the span of history covered while keeping recent versions dense.
     ///
-    /// Interpretation of the spec (FLAGGED for owner sign-off — some steps are ambiguous):
-    ///   Versions are ordered newest-first (index 0 = newest), matching the spec's "insert x
-    ///   at the front" example. On an eviction:
-    ///     skipValue     = sameDayCount + skipModifier   (skipModifier starts at 1)
-    ///     sameDayCount   = versions (incl. the just-added one) sharing the newest version's date
-    ///     if sameDayCount is odd  -> evict from the back  at index (n - 1 - skipValue)
+    /// Rule (confirmed with the owner, 2026-07-21):
+    ///   Versions are ordered newest-first (index 0 = newest, index n-1 = the last/oldest).
+    ///   On an eviction:
+    ///     skipValue    = sameDayCount + skipModifier   (skipModifier starts at 1, so skipValue >= 2)
+    ///     sameDayCount  = versions (incl. the just-added one) sharing the newest version's date
+    ///     if sameDayCount is odd  -> evict from the back  at index (n - skipValue)
     ///     else                    -> evict from the front at index (skipValue)
-    ///   The chosen index is clamped to [1, n-2] so index 0 (newest) and index n-1 (oldest)
-    ///   are never evicted. skipModifier increments each eviction and resets to 1 once
-    ///   skipValue >= N/2 - 1, so the eviction point cycles through the interior over time.
-    ///   State (skipModifier) is tracked per file key, matching "one rotating set per file."
-    ///
-    /// The spec's 10-item worked example ([1..0] + x -> [x,1,3,4,5,6,7,8,9,0], i.e. "2" removed)
-    /// is pinned in the tests so any reinterpretation is caught.
+    ///   skipValue >= 2 means the back branch reaches the *second-to-last* (n-2) at most and
+    ///   never the last (n-1): the last/oldest version is pinned. Per the owner it represents
+    ///   the project's last stable condition — a stand-in for an explicit "release" until the
+    ///   roadmapped "Handle releases" feature lets a version be pinned deliberately. The newest
+    ///   (index 0) is always kept too. The index is clamped to [1, n-2] to hold both invariants
+    ///   for large skipValue. skipModifier increments each eviction and resets to 1 once
+    ///   skipValue >= N/2 - 1, cycling the eviction point through the interior over time.
+    ///   State (skipModifier) is tracked per file key: one rotating set per file.
     /// </summary>
     public class AnswersRetention : IRetentionPolicy
     {
@@ -57,10 +58,10 @@ namespace Wander.Core.Services.Retention
                 var skipValue = sameDayCount + skipModifier;
 
                 int index = (sameDayCount % 2 == 1)
-                    ? n - 1 - skipValue   // odd  -> from the back
-                    : skipValue;          // even -> from the front
+                    ? n - skipValue   // odd  -> from the back; skipValue>=2 so the last (n-1) is safe
+                    : skipValue;      // even -> from the front
 
-                // Never evict the absolute newest (0) or oldest (n-1).
+                // Hold both invariants for large skipValue: never the newest (0) or the last (n-1).
                 index = Math.Clamp(index, 1, n - 2);
 
                 evicted.Add(timeline[index].Id);

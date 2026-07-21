@@ -51,6 +51,18 @@ namespace Wander.Core.Services
             await src.CopyToAsync(dst);
         }
 
+        /// <summary>Total bytes the version store occupies on disk (deduped blobs).</summary>
+        public long TotalSizeBytes()
+        {
+            if (!Directory.Exists(_root)) return 0;
+            long total = 0;
+            foreach (var file in Directory.EnumerateFiles(_root, "*", SearchOption.AllDirectories))
+            {
+                total += new FileInfo(file).Length;
+            }
+            return total;
+        }
+
         /// <summary>Removes a blob once no history row references its hash (called after eviction).</summary>
         public void DeleteBlobIfUnreferenced(string hash, bool stillReferenced)
         {

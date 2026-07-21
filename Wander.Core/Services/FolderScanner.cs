@@ -16,6 +16,7 @@ namespace Wander.Core.Services
         public int Added { get; set; }
         public int Updated { get; set; }
         public int Tombstoned { get; set; }
+        public int Merged { get; set; }
     }
 
     /// <summary>
@@ -46,15 +47,32 @@ namespace Wander.Core.Services
 
             var result = new ScanResult();
 
-            // Index by path defensively: two FileStates can share a path (the table is keyed
-            // by GUID, and two peers can independently create the same path — open question #1).
-            // Keep the live row over a tombstone, then the most recent; never crash on a dup.
+            // Index by path. Two FileStates can share a path (the table is keyed by GUID, and
+            // two peers can independently create the same path — open question #1).
             var known = new Dictionary<string, FileState>(StringComparer.OrdinalIgnoreCase);
-            foreach (var s in await _db.GetAllStatesAsync())
+            foreach (var group in (await _db.GetAllStatesAsync()).GroupBy(s => s.RelativePath, StringComparer.OrdinalIgnoreCase))
             {
-                if (!known.TryGetValue(s.RelativePath, out var kept) || PreferOver(s, kept))
+                var live = group.Where(s => !s.IsDeleted).ToList();
+
+                // Auto-merge the no-conflict case: several GUIDs claim one path with identical
+                // content. Converge on the smallest GUID (deterministic across peers, so every
+                // node reaches the same canonical id) and fold the losers' history into it.
+                // Divergent content (a real conflict) is left for the future resolution screen.
+                if (live.Count > 1 && live.Select(s => s.Hash).Distinct().Count() == 1)
                 {
-                    known[s.RelativePath] = s;
+                    var canonical = live.OrderBy(s => s.Guid, StringComparer.Ordinal).First();
+                    foreach (var dup in live.Where(s => s.Guid != canonical.Guid))
+                    {
+                        await _db.ReassignVersionsAsync(dup.Guid, canonical.Guid);
+                        await _db.DeleteStateAsync(dup.Guid);
+                        result.Merged++;
+                    }
+                    known[group.Key] = canonical;
+                }
+                else
+                {
+                    // Keep the live row over a tombstone, then the most recent.
+                    known[group.Key] = group.Aggregate((a, b) => PreferOver(b, a) ? b : a);
                 }
             }
             var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

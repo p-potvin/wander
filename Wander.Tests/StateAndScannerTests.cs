@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Wander.Core.Data;
 using Wander.Core.Models;
 using Wander.Core.Services;
+using Wander.Core.Utils;
 using Xunit;
 
 namespace Wander.Tests
@@ -130,18 +131,36 @@ namespace Wander.Tests
         }
 
         [Fact]
-        public async Task ToleratesDuplicatePathsAcrossGuids()
+        public async Task ToleratesDivergentDuplicatePathsWithoutCrashing()
         {
-            // Two FileStates can share a path (independent GUIDs from two peers). The scan
-            // must not crash building its path index — regression for the daemon startup crash.
+            // Two GUIDs claim one path with DIFFERENT content (a real conflict). The scan must
+            // not crash building its path index — left for the future resolution screen, not merged.
             await _db.InitializeAsync();
             await _db.UpsertFileStateAsync(new FileState { Guid = "g-a", RelativePath = "dup.txt", Hash = "h1", LastModified = DateTime.UtcNow.AddMinutes(-5) });
             await _db.UpsertFileStateAsync(new FileState { Guid = "g-b", RelativePath = "dup.txt", Hash = "h2", LastModified = DateTime.UtcNow });
             _root.WriteFile("dup.txt", "content");
 
-            var ex = await Record.ExceptionAsync(() => _scanner.ScanAsync());
+            var result = await Record.ExceptionAsync(() => _scanner.ScanAsync());
 
-            Assert.Null(ex); // no throw
+            Assert.Null(result); // no throw
+        }
+
+        [Fact]
+        public async Task AutoMergesIdenticalContentDuplicatePaths()
+        {
+            // Two GUIDs, one path, IDENTICAL content -> converge on the smallest GUID, fold history.
+            await _db.InitializeAsync();
+            _root.WriteFile("dup.txt", "same content");
+            var hash = HashHelper.ComputeFileHash(Path.Combine(_root.Path, "dup.txt"));
+            await _db.UpsertFileStateAsync(new FileState { Guid = "guid-bbb", RelativePath = "dup.txt", Hash = hash, LastModified = DateTime.UtcNow });
+            await _db.UpsertFileStateAsync(new FileState { Guid = "guid-aaa", RelativePath = "dup.txt", Hash = hash, LastModified = DateTime.UtcNow.AddMinutes(-5) });
+
+            var result = await _scanner.ScanAsync();
+
+            Assert.Equal(1, result.Merged);
+            var remaining = (await _db.GetAllStatesAsync()).Where(s => s.RelativePath == "dup.txt").ToList();
+            Assert.Single(remaining);
+            Assert.Equal("guid-aaa", remaining[0].Guid); // smallest GUID wins, deterministically
         }
 
         [Fact]

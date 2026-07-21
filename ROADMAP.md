@@ -85,15 +85,16 @@ turns mocks into a working core, with tests, before any feature work.
 - [x] **Wander back in time** (flagship): per-file version history + restore, verified end-to-end.
   - Content-addressed `VersionStore` under `.wander/versions` (dedup); `FileVersions` timeline table.
   - `VersionRecorder` captures a version on every content change — local edit, initial scan, or pull from a peer (attributed to the source node).
-  - **A.N.S.W.E.R.S.** retention engine (`AnswersRetention`, behind `IRetentionPolicy`) implements the owner's alternating non-sequential "middle-out" thinning. ⚠️ *Interpretation flagged for owner sign-off — see the doc comment in `AnswersRetention.cs`; the spec has genuine ambiguity and the exact eviction rule is the owner's call.*
-  - Dashboard "Wander back in time" window: file list → version timeline (current marker, source, size) → Restore. Restore = a normal edit that propagates to the team.
-  - Fixed a real startup crash surfaced by the live test: the scanner threw on two FileStates sharing one path (open question #1). Now tolerated (live-over-tombstone, then newest); regression-tested.
-- [x] 3–4 peer mesh with opportunistic relay — the daemon already pulls from *every* discovered tailnet peer each round, so whoever holds the newest version serves it (relay is emergent, no special roles). Multi-peer works today; hardening/awareness features below.
-- [ ] Soft presence hints in dashboard/tray ("Alice saved this 2 min ago")
-- [ ] Folder membership & invites built on tailnet identities
-- [ ] Reconcile duplicate GUIDs for the same path across peers (open question #1 — currently tolerated, not merged)
-- [ ] macOS/Linux builds (Avalonia makes this a checkbox, not a rewrite)
+  - **A.N.S.W.E.R.S.** retention engine (`AnswersRetention`, behind `IRetentionPolicy`) implements the owner's alternating non-sequential "middle-out" thinning. ✅ *Rule confirmed with owner 2026-07-21*: odd → evict `n - skipValue` (reaches second-to-last, never the last); the last/oldest version is pinned as the project's stable/"release" anchor; newest always kept. Default cap **N = 10** (user-configurable).
+  - Dashboard "Wander back in time" window: file list → version timeline (current marker, source, size) → Restore, plus a **backup-size readout** (disk used vs. potential = project size × N). Restore = a normal edit that propagates to the team.
+  - Duplicate same-path GUIDs (open question #1): **auto-merge the no-conflict case** — identical content converges on the smallest GUID (deterministic across peers) and folds history in. A real startup crash here (scanner threw on the dup) was caught by live testing and fixed; regression-tested.
+- [x] 3–4 peer mesh with opportunistic relay — the daemon already pulls from *every* discovered tailnet peer each round, so whoever holds the newest version serves it (relay is emergent, no special roles).
+- [ ] **Soft presence hints** in dashboard/tray ("Alice saved this 2 min ago") — *next up (highest value)*
+- [ ] Folder membership & invites built on tailnet identities — *after presence*
+- [ ] **Handle releases**: let a version be pinned deliberately as a named release/stable anchor (formalizes the "last version is untouched" placeholder in A.N.S.W.E.R.S.)
+- [ ] **Casual-friendly conflict-resolution screen**: when same-path content diverges (the conflict case auto-merge leaves alone), a resolution UI simpler than a git diff for non-technical users. *Next-phase challenge.*
 - [ ] Transparent privacy panel: "here is exactly what Wander stores, and why" (VaultWares voice)
+- [ ] macOS/Linux builds — *deliberately last: only once the Windows app is built and the app logic/rules are settled* (Avalonia makes it a checkbox, not a rewrite)
 
 ## Phase 3 — Showpieces
 

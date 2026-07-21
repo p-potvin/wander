@@ -25,6 +25,7 @@ namespace Wander.Dashboard
         private readonly VersionStore _store;
         private readonly WanderOptions _options;
         private WindowNotificationManager? _notifications;
+        private List<FileState> _liveStates = new();
 
         public HistoryWindow() : this(Program.Node.Services) { }
 
@@ -45,14 +46,25 @@ namespace Wander.Dashboard
 
         private async Task LoadFilesAsync()
         {
-            var states = (await _db.GetAllStatesAsync())
+            _liveStates = (await _db.GetAllStatesAsync())
                 .Where(s => !s.IsDeleted)
                 .GroupBy(s => s.RelativePath, StringComparer.OrdinalIgnoreCase)
                 .Select(g => g.OrderByDescending(s => s.LastModified).First()) // collapse same-path dup GUIDs
                 .OrderBy(s => s.RelativePath, StringComparer.OrdinalIgnoreCase)
-                .Select(s => new FileRow(s.Guid, s.RelativePath))
                 .ToList();
-            await Dispatcher.UIThread.InvokeAsync(() => FilesList.ItemsSource = states);
+
+            var files = _liveStates.Select(s => new FileRow(s.Guid, s.RelativePath)).ToList();
+
+            var used = _store.TotalSizeBytes();
+            var projectSize = _liveStates.Sum(s => s.SizeBytes);
+            var potential = projectSize * _options.MaxVersionsPerFile;
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                FilesList.ItemsSource = files;
+                BackupSizeText.Text =
+                    $"History: {FormatBytes(used)} used · up to ~{FormatBytes(potential)} at {_options.MaxVersionsPerFile} versions/file";
+            });
         }
 
         private async void File_SelectionChanged(object? sender, SelectionChangedEventArgs e)

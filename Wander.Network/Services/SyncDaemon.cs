@@ -64,7 +64,8 @@ namespace Wander.Network.Services
             var scan = await _scanner.ScanAsync(stoppingToken);
             _logger.LogInformation("Initial scan: {Seen} files, {Added} new, {Updated} updated, {Tombstoned} tombstoned",
                 scan.FilesSeen, scan.Added, scan.Updated, scan.Tombstoned);
-            _activity.Add("scan", $"Indexed {scan.FilesSeen} file{(scan.FilesSeen == 1 ? "" : "s")} ({scan.Added} new, {scan.Updated} updated, {scan.Tombstoned} deleted)");
+            _activity.Add("scan", $"Indexed {scan.FilesSeen} file{(scan.FilesSeen == 1 ? "" : "s")} ({scan.Added} new, {scan.Updated} updated, {scan.Tombstoned} deleted)"
+                + (scan.Merged > 0 ? $", merged {scan.Merged} duplicate{(scan.Merged == 1 ? "" : "s")}" : ""));
 
             var purged = _trash.PurgeExpired(DateTime.UtcNow);
             if (purged > 0) _logger.LogInformation("Purged {Count} expired trash batches", purged);
@@ -106,9 +107,9 @@ namespace Wander.Network.Services
                         {
                             nextRescan = DateTime.UtcNow + rescanEvery;
                             var rescan = await _scanner.ScanAsync(stoppingToken);
-                            if (rescan.Added + rescan.Updated + rescan.Tombstoned > 0)
+                            if (rescan.Added + rescan.Updated + rescan.Tombstoned + rescan.Merged > 0)
                             {
-                                _activity.Add("scan", $"Re-scan caught {rescan.Added} new, {rescan.Updated} updated, {rescan.Tombstoned} deleted (missed by the live watcher)");
+                                _activity.Add("scan", $"Re-scan caught {rescan.Added} new, {rescan.Updated} updated, {rescan.Tombstoned} deleted, {rescan.Merged} merged");
                             }
                         }
 
