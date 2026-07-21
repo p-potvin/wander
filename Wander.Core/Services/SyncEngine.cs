@@ -33,20 +33,23 @@ namespace Wander.Core.Services
         private readonly TrashService _trash;
         private readonly string _localNodeName;
         private readonly ActivityLog? _activity;
+        private readonly VersionRecorder? _versions;
 
         public SyncEngine(StateDatabase db, string syncRootPath, TrashService trash, string localNodeName,
-            ActivityLog? activity = null)
+            ActivityLog? activity = null, VersionRecorder? versions = null)
         {
             _db = db;
             _syncRootPath = syncRootPath;
             _trash = trash;
             _localNodeName = localNodeName;
             _activity = activity;
+            _versions = versions;
         }
 
         public async Task<SyncAction> ProcessRemoteFileStateAsync(
             FileState remote,
-            Func<AsyncServerStreamingCall<FileChunk>>? openDownload)
+            Func<AsyncServerStreamingCall<FileChunk>>? openDownload,
+            string peerName = "peer")
         {
             var localPath = PathUtils.ToLocalPath(_syncRootPath, remote.RelativePath);
             var localState = await _db.GetFileStateByGuidAsync(remote.Guid);
@@ -82,7 +85,7 @@ namespace Wander.Core.Services
                     return SyncAction.SkippedLocalNewer;
                 }
 
-                return await DownloadAsync(remote, localPath, openDownload, conflictCopy: false);
+                return await DownloadAsync(remote, localPath, openDownload, conflictCopy: false, peerName);
             }
 
             var localHash = HashHelper.ComputeFileHash(localPath);
@@ -99,7 +102,7 @@ namespace Wander.Core.Services
             {
                 // Local matches its last-indexed state: a plain fast-forward, no conflict.
                 return remote.LastModified >= localState!.LastModified
-                    ? await DownloadAsync(remote, localPath, openDownload, conflictCopy: false)
+                    ? await DownloadAsync(remote, localPath, openDownload, conflictCopy: false, peerName)
                     : SyncAction.SkippedLocalNewer;
             }
 
@@ -111,7 +114,7 @@ namespace Wander.Core.Services
                 File.Move(localPath, conflictPath);
                 Console.WriteLine($"[Conflict] Local edit preserved as: {Path.GetFileName(conflictPath)}");
                 _activity?.Add("conflict", $"{remote.RelativePath}: local edit preserved as {Path.GetFileName(conflictPath)}");
-                return await DownloadAsync(remote, localPath, openDownload, conflictCopy: true);
+                return await DownloadAsync(remote, localPath, openDownload, conflictCopy: true, peerName);
             }
 
             // Local edit is newer: we win. The peer will make its own conflict copy when it pulls from us.
@@ -151,7 +154,8 @@ namespace Wander.Core.Services
             FileState remote,
             string localPath,
             Func<AsyncServerStreamingCall<FileChunk>>? openDownload,
-            bool conflictCopy)
+            bool conflictCopy,
+            string peerName)
         {
             if (openDownload == null) return SyncAction.None;
 
@@ -201,6 +205,12 @@ namespace Wander.Core.Services
                 LastModified = remote.LastModified,
                 IsDeleted = false
             });
+
+            if (_versions != null)
+            {
+                await _versions.RecordAsync(remote.Guid, remote.RelativePath, localPath, remote.Hash,
+                    remote.SizeBytes, remote.LastModified, peerName);
+            }
 
             Console.WriteLine($"[Sync] Downloaded: {remote.RelativePath}");
             if (!conflictCopy) _activity?.Add("pull", $"{remote.RelativePath} ({remote.SizeBytes:N0} B)");

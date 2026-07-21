@@ -1,0 +1,89 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Wander.Dashboard.HistoryWindow"
+        Title="Wander back in time"
+        Width="820" Height="560"
+        Icon="/Assets/wander-gold.png"
+        Background="{StaticResource VaultWarmBg}">
+
+    <Grid Margin="20" RowDefinitions="Auto,*">
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,16">
+            <Image Source="/Assets/wander-console.png" Width="24" Height="24" VerticalAlignment="Center"/>
+            <TextBlock Text="Wander back in time" FontSize="18" FontWeight="SemiBold"
+                       Foreground="{StaticResource VaultInk}" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnDefinitions="300,16,*">
+
+            <!-- Files (warm document frame) -->
+            <Border Grid.Column="0" Background="{StaticResource VaultWarmRaised}" CornerRadius="10" Padding="12"
+                    BorderBrush="{StaticResource VaultWarmBorderSubtle}" BorderThickness="1">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Grid.Row="0" Text="TRACKED FILES" FontSize="11" LetterSpacing="1.5"
+                               Foreground="{StaticResource VaultInkSecondary}" Margin="4,0,0,8"/>
+                    <ListBox Grid.Row="1" x:Name="FilesList" Background="Transparent"
+                             SelectionChanged="File_SelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding RelativePath}" FontSize="13"
+                                           Foreground="{StaticResource VaultInk}" TextTrimming="CharacterEllipsis"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Timeline (console operational core) -->
+            <Border Grid.Column="2" Background="{StaticResource VaultConsoleBg}" CornerRadius="10"
+                    BorderBrush="{StaticResource VaultConsoleBorderSubtle}" BorderThickness="1" Padding="2">
+                <Border Background="{StaticResource VaultConsoleSurface}" CornerRadius="8" Padding="16">
+                    <Grid RowDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Row="0" Text="VERSION TIMELINE" FontSize="11" LetterSpacing="1.5"
+                                   Foreground="{StaticResource VaultConsoleGold}" Margin="0,0,0,10"/>
+
+                        <ScrollViewer Grid.Row="1">
+                            <ItemsControl x:Name="VersionsList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource VaultConsoleRaised}" CornerRadius="6"
+                                                Padding="12,8" Margin="0,0,0,6">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <StackPanel Grid.Column="0" Spacing="2">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="{Binding When}" FontSize="13"
+                                                                   FontFamily="{StaticResource VaultFontMono}"
+                                                                   Foreground="{StaticResource VaultConsoleText}"/>
+                                                        <Border Background="{StaticResource VaultConsoleElevated}" CornerRadius="4"
+                                                                Padding="6,1" IsVisible="{Binding IsCurrent}">
+                                                            <TextBlock Text="current" FontSize="10"
+                                                                       Foreground="{StaticResource VaultSignalOnline}"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Detail}" FontSize="11"
+                                                               FontFamily="{StaticResource VaultFontMono}"
+                                                               Foreground="{StaticResource VaultConsoleTextSecondary}"/>
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="Restore" Click="Restore_Click"
+                                                        VerticalAlignment="Center" Padding="12,5"
+                                                        IsVisible="{Binding CanRestore}"
+                                                        Background="{StaticResource VaultConsoleGold}"
+                                                        Foreground="{StaticResource VaultConsoleBg}"
+                                                        CornerRadius="6"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <TextBlock Grid.Row="2" x:Name="HintText" Margin="0,10,0,0" FontSize="12"
+                                   TextWrapping="Wrap" Foreground="{StaticResource VaultConsoleTextSecondary}"
+                                   Text="Select a file to see its history. Restoring brings an old version back as the current file — it then syncs to your team like any edit."/>
+                    </Grid>
+                </Border>
+            </Border>
+
+        </Grid>
+    </Grid>
+</Window>

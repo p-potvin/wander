@@ -22,16 +22,21 @@ namespace Wander.Core.Services
         private readonly StateDatabase _db;
         private readonly string _syncRootPath;
         private readonly TimeSpan _quietPeriod;
+        private readonly VersionRecorder? _versions;
+        private readonly string _localNodeName;
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _pending =
             new(StringComparer.OrdinalIgnoreCase);
 
         public event EventHandler<FileState>? StateChanged;
 
-        public LocalIndexer(StateDatabase db, string syncRootPath, TimeSpan? quietPeriod = null)
+        public LocalIndexer(StateDatabase db, string syncRootPath, TimeSpan? quietPeriod = null,
+            VersionRecorder? versions = null, string localNodeName = "local")
         {
             _db = db;
             _syncRootPath = syncRootPath;
             _quietPeriod = quietPeriod ?? DefaultQuietPeriod;
+            _versions = versions;
+            _localNodeName = localNodeName;
         }
 
         public void NotifyChanged(string fullPath) => ScheduleReconcile(fullPath);
@@ -139,6 +144,11 @@ namespace Wander.Core.Services
             }
 
             await _db.UpsertFileStateAsync(state);
+            if (_versions != null)
+            {
+                await _versions.RecordAsync(state.Guid, state.RelativePath, localPath, state.Hash,
+                    state.SizeBytes, state.LastModified, _localNodeName);
+            }
             StateChanged?.Invoke(this, state);
         }
 

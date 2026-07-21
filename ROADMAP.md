@@ -82,10 +82,16 @@ turns mocks into a working core, with tests, before any feature work.
 
 ## Phase 2 — The team release
 
-- [ ] 3–4 peer mesh with opportunistic relay
-- [ ] Soft presence hints in dashboard/tray
+- [x] **Wander back in time** (flagship): per-file version history + restore, verified end-to-end.
+  - Content-addressed `VersionStore` under `.wander/versions` (dedup); `FileVersions` timeline table.
+  - `VersionRecorder` captures a version on every content change — local edit, initial scan, or pull from a peer (attributed to the source node).
+  - **A.N.S.W.E.R.S.** retention engine (`AnswersRetention`, behind `IRetentionPolicy`) implements the owner's alternating non-sequential "middle-out" thinning. ⚠️ *Interpretation flagged for owner sign-off — see the doc comment in `AnswersRetention.cs`; the spec has genuine ambiguity and the exact eviction rule is the owner's call.*
+  - Dashboard "Wander back in time" window: file list → version timeline (current marker, source, size) → Restore. Restore = a normal edit that propagates to the team.
+  - Fixed a real startup crash surfaced by the live test: the scanner threw on two FileStates sharing one path (open question #1). Now tolerated (live-over-tombstone, then newest); regression-tested.
+- [x] 3–4 peer mesh with opportunistic relay — the daemon already pulls from *every* discovered tailnet peer each round, so whoever holds the newest version serves it (relay is emergent, no special roles). Multi-peer works today; hardening/awareness features below.
+- [ ] Soft presence hints in dashboard/tray ("Alice saved this 2 min ago")
 - [ ] Folder membership & invites built on tailnet identities
-- [ ] **Wander back in time**: browsable per-file version history, A.N.S.W.E.R.S. retention engine
+- [ ] Reconcile duplicate GUIDs for the same path across peers (open question #1 — currently tolerated, not merged)
 - [ ] macOS/Linux builds (Avalonia makes this a checkbox, not a rewrite)
 - [ ] Transparent privacy panel: "here is exactly what Wander stores, and why" (VaultWares voice)
 

@@ -130,6 +130,21 @@ namespace Wander.Tests
         }
 
         [Fact]
+        public async Task ToleratesDuplicatePathsAcrossGuids()
+        {
+            // Two FileStates can share a path (independent GUIDs from two peers). The scan
+            // must not crash building its path index — regression for the daemon startup crash.
+            await _db.InitializeAsync();
+            await _db.UpsertFileStateAsync(new FileState { Guid = "g-a", RelativePath = "dup.txt", Hash = "h1", LastModified = DateTime.UtcNow.AddMinutes(-5) });
+            await _db.UpsertFileStateAsync(new FileState { Guid = "g-b", RelativePath = "dup.txt", Hash = "h2", LastModified = DateTime.UtcNow });
+            _root.WriteFile("dup.txt", "content");
+
+            var ex = await Record.ExceptionAsync(() => _scanner.ScanAsync());
+
+            Assert.Null(ex); // no throw
+        }
+
+        [Fact]
         public async Task IgnoresWanderInternalDirectory()
         {
             await _db.InitializeAsync();

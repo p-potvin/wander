@@ -20,6 +20,12 @@
                            Foreground="{StaticResource VaultInkSecondary}" VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right" Orientation="Horizontal" Spacing="10">
+                <Button x:Name="HistoryButton" Click="History_Click" VerticalAlignment="Center"
+                        Background="{StaticResource VaultWarmRaised}" BorderBrush="{StaticResource VaultWarmBorderSubtle}"
+                        BorderThickness="1" CornerRadius="12" Padding="12,5"
+                        Foreground="{StaticResource VaultInk}">
+                    <TextBlock Text="Wander back in time" FontSize="12"/>
+                </Button>
                 <Button x:Name="PauseButton" Click="Pause_Click" VerticalAlignment="Center"
                         Background="{StaticResource VaultWarmRaised}" BorderBrush="{StaticResource VaultWarmBorderSubtle}"
                         BorderThickness="1" CornerRadius="12" Padding="12,5"

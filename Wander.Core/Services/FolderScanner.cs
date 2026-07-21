@@ -28,11 +28,16 @@ namespace Wander.Core.Services
     {
         private readonly StateDatabase _db;
         private readonly string _syncRootPath;
+        private readonly VersionRecorder? _versions;
+        private readonly string _localNodeName;
 
-        public FolderScanner(StateDatabase db, string syncRootPath)
+        public FolderScanner(StateDatabase db, string syncRootPath,
+            VersionRecorder? versions = null, string localNodeName = "local")
         {
             _db = db;
             _syncRootPath = syncRootPath;
+            _versions = versions;
+            _localNodeName = localNodeName;
         }
 
         public async Task<ScanResult> ScanAsync(CancellationToken ct = default)
@@ -40,7 +45,18 @@ namespace Wander.Core.Services
             Directory.CreateDirectory(_syncRootPath);
 
             var result = new ScanResult();
-            var known = (await _db.GetAllStatesAsync()).ToDictionary(s => s.RelativePath, StringComparer.OrdinalIgnoreCase);
+
+            // Index by path defensively: two FileStates can share a path (the table is keyed
+            // by GUID, and two peers can independently create the same path — open question #1).
+            // Keep the live row over a tombstone, then the most recent; never crash on a dup.
+            var known = new Dictionary<string, FileState>(StringComparer.OrdinalIgnoreCase);
+            foreach (var s in await _db.GetAllStatesAsync())
+            {
+                if (!known.TryGetValue(s.RelativePath, out var kept) || PreferOver(s, kept))
+                {
+                    known[s.RelativePath] = s;
+                }
+            }
             var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var filePath in Directory.EnumerateFiles(_syncRootPath, "*", SearchOption.AllDirectories))
@@ -58,7 +74,10 @@ namespace Wander.Core.Services
                     && existing.SizeBytes == info.Length
                     && existing.LastModified == info.LastWriteTimeUtc)
                 {
-                    continue; // unchanged since last index; skip the expensive hash
+                    // Unchanged since last index; skip the expensive re-hash but make sure a
+                    // baseline version exists (matters for files migrated from a pre-history db).
+                    await RecordBaselineAsync(existing.Guid, relativePath, filePath, existing.Hash, info);
+                    continue;
                 }
 
                 var hash = HashHelper.ComputeFileHash(filePath);
@@ -68,6 +87,7 @@ namespace Wander.Core.Services
                     existing.SizeBytes = info.Length;
                     existing.LastModified = info.LastWriteTimeUtc;
                     await _db.UpsertFileStateAsync(existing);
+                    await RecordBaselineAsync(existing.Guid, relativePath, filePath, hash, info);
                     continue;
                 }
 
@@ -82,6 +102,7 @@ namespace Wander.Core.Services
                 };
 
                 await _db.UpsertFileStateAsync(state);
+                await RecordBaselineAsync(state.Guid, relativePath, filePath, hash, info);
                 if (existing == null) result.Added++; else result.Updated++;
             }
 
@@ -95,6 +116,21 @@ namespace Wander.Core.Services
             }
 
             return result;
+        }
+
+        private Task RecordBaselineAsync(string guid, string relativePath, string filePath, string hash, FileInfo info)
+        {
+            // RecordAsync is a no-op when this content is already the newest recorded version,
+            // so calling it on every scan is cheap (one indexed lookup) and self-deduping.
+            return _versions?.RecordAsync(guid, relativePath, filePath, hash, info.Length,
+                info.LastWriteTimeUtc, _localNodeName) ?? Task.CompletedTask;
+        }
+
+        /// <summary>Which of two same-path rows to treat as authoritative: live beats tombstone, then newer.</summary>
+        private static bool PreferOver(FileState candidate, FileState current)
+        {
+            if (candidate.IsDeleted != current.IsDeleted) return !candidate.IsDeleted;
+            return candidate.LastModified > current.LastModified;
         }
     }
 }

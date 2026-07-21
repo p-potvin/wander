@@ -69,7 +69,8 @@ namespace Wander.Core.Services
                     var remote = response.ToFileState();
                     var action = await _engine.ProcessRemoteFileStateAsync(
                         remote,
-                        () => client.DownloadFile(new DownloadRequest { Guid = remote.Guid }, cancellationToken: ct));
+                        () => client.DownloadFile(new DownloadRequest { Guid = remote.Guid }, cancellationToken: ct),
+                        summary.PeerName);
 
                     switch (action)
                     {

@@ -24,6 +24,7 @@ namespace Wander.Dashboard
         private static readonly IBrush SignalWarning = new SolidColorBrush(Color.Parse("#F0B94B"));
         private static readonly IBrush SignalAlert = new SolidColorBrush(Color.Parse("#FF6B7A"));
 
+        private readonly IServiceProvider _services;
         private readonly StateDatabase _db;
         private readonly TailscaleService _tailscale;
         private readonly ActivityLog _activity;
@@ -40,6 +41,7 @@ namespace Wander.Dashboard
         {
             InitializeComponent();
 
+            _services = services;
             _db = services.GetRequiredService<StateDatabase>();
             _tailscale = services.GetRequiredService<TailscaleService>();
             _activity = services.GetRequiredService<ActivityLog>();
@@ -74,6 +76,19 @@ namespace Wander.Dashboard
         private void Pause_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             _controller.Toggle(); // ReflectPauseState runs via PausedChanged
+        }
+
+        private HistoryWindow? _historyWindow;
+
+        private void History_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            if (_historyWindow is { } w && w.IsVisible)
+            {
+                w.Activate();
+                return;
+            }
+            _historyWindow = new HistoryWindow(_services);
+            _historyWindow.Show();
         }
 
         private void ReflectPauseState(bool paused)

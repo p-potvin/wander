@@ -32,7 +32,19 @@ namespace Wander.Core.Data
                     Hash TEXT NOT NULL,
                     IsDeleted INTEGER NOT NULL DEFAULT 0
                 );
-                CREATE INDEX IF NOT EXISTS IX_FileStates_RelativePath ON FileStates (RelativePath);";
+                CREATE INDEX IF NOT EXISTS IX_FileStates_RelativePath ON FileStates (RelativePath);
+
+                CREATE TABLE IF NOT EXISTS FileVersions (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Guid TEXT NOT NULL,
+                    RelativePath TEXT NOT NULL,
+                    Hash TEXT NOT NULL,
+                    SizeBytes INTEGER NOT NULL,
+                    ModifiedUtc TEXT NOT NULL,
+                    SourceNode TEXT NOT NULL,
+                    RecordedUtc TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS IX_FileVersions_Guid ON FileVersions (Guid);";
 
             await connection.ExecuteAsync(createTableQuery);
         }
@@ -79,6 +91,40 @@ namespace Wander.Core.Data
             using var connection = new SqliteConnection(_connectionString);
             var query = @"UPDATE FileStates SET IsDeleted = 1, LastModified = @WhenUtc WHERE Guid = @Guid;";
             await connection.ExecuteAsync(query, new { Guid = guid, WhenUtc = whenUtc });
+        }
+
+        // --- Version history ---
+
+        public async Task<long> AddVersionAsync(FileVersion version)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            var query = @"
+                INSERT INTO FileVersions (Guid, RelativePath, Hash, SizeBytes, ModifiedUtc, SourceNode, RecordedUtc)
+                VALUES (@Guid, @RelativePath, @Hash, @SizeBytes, @ModifiedUtc, @SourceNode, @RecordedUtc);
+                SELECT last_insert_rowid();";
+            return await connection.ExecuteScalarAsync<long>(query, version);
+        }
+
+        /// <summary>Newest first.</summary>
+        public async Task<IReadOnlyList<FileVersion>> GetVersionsForGuidAsync(string guid)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            var query = "SELECT * FROM FileVersions WHERE Guid = @Guid ORDER BY RecordedUtc DESC, Id DESC;";
+            return (await connection.QueryAsync<FileVersion>(query, new { Guid = guid })).AsList();
+        }
+
+        public async Task DeleteVersionAsync(long id)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.ExecuteAsync("DELETE FROM FileVersions WHERE Id = @Id;", new { Id = id });
+        }
+
+        public async Task<bool> IsHashReferencedAsync(string hash)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            var count = await connection.ExecuteScalarAsync<long>(
+                "SELECT COUNT(1) FROM FileVersions WHERE Hash = @Hash;", new { Hash = hash });
+            return count > 0;
         }
     }
 }

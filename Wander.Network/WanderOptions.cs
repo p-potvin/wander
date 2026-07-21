@@ -29,6 +29,9 @@ namespace Wander.Network
 
         public int TrashRetentionDays { get; set; } = 30;
 
+        /// <summary>Max versions kept per file in "Wander back in time" before A.N.S.W.E.R.S. thins.</summary>
+        public int MaxVersionsPerFile { get; set; } = 20;
+
         /// <summary>
         /// Velopack update feed (a URL or local/UNC path to the release folder). When empty,
         /// auto-update is disabled — useful for dev runs and until a release feed is published.

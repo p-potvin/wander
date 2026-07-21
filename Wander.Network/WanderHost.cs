@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Wander.Core.Data;
 using Wander.Core.Services;
+using Wander.Core.Services.Retention;
 using Wander.Network.Services;
 
 namespace Wander.Network
@@ -42,22 +43,39 @@ namespace Wander.Network
                 var options = sp.GetRequiredService<IOptions<WanderOptions>>().Value;
                 return new TrashService(options.SyncRoot, TimeSpan.FromDays(options.TrashRetentionDays));
             });
+            // "Wander back in time": content-addressed version store + A.N.S.W.E.R.S. retention.
+            builder.Services.AddSingleton(sp =>
+            {
+                var options = sp.GetRequiredService<IOptions<WanderOptions>>().Value;
+                return new VersionStore(options.SyncRoot);
+            });
+            builder.Services.AddSingleton<IRetentionPolicy>(_ => new AnswersRetention());
+            builder.Services.AddSingleton(sp =>
+            {
+                var options = sp.GetRequiredService<IOptions<WanderOptions>>().Value;
+                return new VersionRecorder(sp.GetRequiredService<StateDatabase>(),
+                    sp.GetRequiredService<VersionStore>(), sp.GetRequiredService<IRetentionPolicy>(),
+                    options.MaxVersionsPerFile);
+            });
+
             builder.Services.AddSingleton(sp =>
             {
                 var options = sp.GetRequiredService<IOptions<WanderOptions>>().Value;
                 return new SyncEngine(sp.GetRequiredService<StateDatabase>(), options.SyncRoot,
                     sp.GetRequiredService<TrashService>(), options.NodeName,
-                    sp.GetRequiredService<ActivityLog>());
+                    sp.GetRequiredService<ActivityLog>(), sp.GetRequiredService<VersionRecorder>());
             });
             builder.Services.AddSingleton(sp =>
             {
                 var options = sp.GetRequiredService<IOptions<WanderOptions>>().Value;
-                return new FolderScanner(sp.GetRequiredService<StateDatabase>(), options.SyncRoot);
+                return new FolderScanner(sp.GetRequiredService<StateDatabase>(), options.SyncRoot,
+                    sp.GetRequiredService<VersionRecorder>(), options.NodeName);
             });
             builder.Services.AddSingleton(sp =>
             {
                 var options = sp.GetRequiredService<IOptions<WanderOptions>>().Value;
-                return new LocalIndexer(sp.GetRequiredService<StateDatabase>(), options.SyncRoot);
+                return new LocalIndexer(sp.GetRequiredService<StateDatabase>(), options.SyncRoot, null,
+                    sp.GetRequiredService<VersionRecorder>(), options.NodeName);
             });
             builder.Services.AddSingleton(sp =>
             {
