@@ -89,7 +89,8 @@ turns mocks into a working core, with tests, before any feature work.
   - Dashboard "Wander back in time" window: file list → version timeline (current marker, source, size) → Restore, plus a **backup-size readout** (disk used vs. potential = project size × N). Restore = a normal edit that propagates to the team.
   - Duplicate same-path GUIDs (open question #1): **auto-merge the no-conflict case** — identical content converges on the smallest GUID (deterministic across peers) and folds history in. A real startup crash here (scanner threw on the dup) was caught by live testing and fixed; regression-tested.
 - [x] 3–4 peer mesh with opportunistic relay — the daemon already pulls from *every* discovered tailnet peer each round, so whoever holds the newest version serves it (relay is emergent, no special roles).
-- [ ] **Soft presence hints** in dashboard/tray ("Alice saved this 2 min ago") — *next up (highest value)*
+- [x] **Soft presence hints** (stage 1): dashboard "Team activity" card shows the newest change per file across the team — who (peer name, or "you") and how long ago — derived from version-history metadata, no new protocol. Helps spot who's active in a file.
+- [ ] Presence stage 2: live cross-peer heartbeat so you see a teammate editing a file *before* their change syncs to you (a `GetRecentActivity` RPC aggregated each round). Stage 1 only reflects changes already pulled here.
 - [ ] Folder membership & invites built on tailnet identities — *after presence*
 - [ ] **Handle releases**: let a version be pinned deliberately as a named release/stable anchor (formalizes the "last version is untouched" placeholder in A.N.S.W.E.R.S.)
 - [ ] **Casual-friendly conflict-resolution screen**: when same-path content diverges (the conflict case auto-merge leaves alone), a resolution UI simpler than a git diff for non-technical users. *Next-phase challenge.*

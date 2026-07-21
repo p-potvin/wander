@@ -19,6 +19,7 @@ namespace Wander.Dashboard
     public partial class MainWindow : Window
     {
         public record ActivityRow(string Time, string Category, string Message);
+        public record PresenceRow(string Path, string Who, string Ago);
 
         private static readonly IBrush SignalOnline = new SolidColorBrush(Color.Parse("#6BE675"));
         private static readonly IBrush SignalWarning = new SolidColorBrush(Color.Parse("#F0B94B"));
@@ -129,6 +130,18 @@ namespace Wander.Dashboard
                 var states = (await _db.GetAllStatesAsync()).ToList();
                 var peers = await _tailscale.GetOnlinePeersAsync();
                 var conflicts = FindConflictCopies();
+
+                // Presence: newest change per file, across the team (who + how long ago).
+                var presence = (await _db.GetRecentVersionsAsync(60))
+                    .GroupBy(v => v.RelativePath, StringComparer.OrdinalIgnoreCase)
+                    .Select(g => g.OrderByDescending(v => v.RecordedUtc).First())
+                    .OrderByDescending(v => v.RecordedUtc)
+                    .Take(6)
+                    .Select(v => new PresenceRow(
+                        System.IO.Path.GetFileName(v.RelativePath),
+                        v.SourceNode == _options.NodeName ? "you" : v.SourceNode,
+                        RelativeTime(v.RecordedUtc)))
+                    .ToList();
                 var feed = _activity.Snapshot()
                     .Select(e => new ActivityRow(e.AtUtc.ToLocalTime().ToString("HH:mm:ss"), e.Category, e.Message))
                     .ToList();
@@ -141,6 +154,9 @@ namespace Wander.Dashboard
 
                     PeersList.ItemsSource = peers;
                     NoPeersText.IsVisible = peers.Count == 0;
+
+                    ActivityByPeerList.ItemsSource = presence;
+                    NoActivityText.IsVisible = presence.Count == 0;
 
                     ConflictsList.ItemsSource = conflicts;
                     NoConflictsText.IsVisible = conflicts.Count == 0;
@@ -200,6 +216,15 @@ namespace Wander.Dashboard
                 unit++;
             }
             return $"{value:0.#} {units[unit]}";
+        }
+
+        private static string RelativeTime(DateTime whenUtc)
+        {
+            var d = DateTime.UtcNow - whenUtc;
+            if (d < TimeSpan.FromSeconds(45)) return "just now";
+            if (d < TimeSpan.FromMinutes(60)) return $"{Math.Max(1, (int)d.TotalMinutes)} min ago";
+            if (d < TimeSpan.FromHours(24)) return $"{(int)d.TotalHours} h ago";
+            return $"{(int)d.TotalDays} d ago";
         }
     }
 }

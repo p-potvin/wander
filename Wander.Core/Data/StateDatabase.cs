@@ -130,6 +130,14 @@ namespace Wander.Core.Data
             return (await connection.QueryAsync<FileVersion>(query, new { Guid = guid })).AsList();
         }
 
+        /// <summary>Most recent version records across all files (newest first) — feeds presence hints.</summary>
+        public async Task<IReadOnlyList<FileVersion>> GetRecentVersionsAsync(int limit)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            var query = "SELECT * FROM FileVersions ORDER BY RecordedUtc DESC, Id DESC LIMIT @Limit;";
+            return (await connection.QueryAsync<FileVersion>(query, new { Limit = limit })).AsList();
+        }
+
         public async Task DeleteVersionAsync(long id)
         {
             using var connection = new SqliteConnection(_connectionString);

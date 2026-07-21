@@ -94,6 +94,31 @@
                 <Border Background="{StaticResource VaultWarmRaised}" CornerRadius="10" Padding="16"
                         BorderBrush="{StaticResource VaultWarmBorderSubtle}" BorderThickness="1">
                     <StackPanel Spacing="8">
+                        <TextBlock Text="TEAM ACTIVITY" FontSize="11" LetterSpacing="1.5"
+                                   Foreground="{StaticResource VaultInkSecondary}"/>
+                        <ItemsControl x:Name="ActivityByPeerList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="*,Auto" Margin="0,3">
+                                        <StackPanel Grid.Column="0" Spacing="1">
+                                            <TextBlock Text="{Binding Path}" FontSize="13" Foreground="{StaticResource VaultInk}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding Who}" FontSize="11" Foreground="{StaticResource VaultInkSecondary}"/>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding Ago}" FontSize="11" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource VaultInkSecondary}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="NoActivityText" Text="No recent changes." IsVisible="False"
+                                   Foreground="{StaticResource VaultInkSecondary}" FontSize="12"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{StaticResource VaultWarmRaised}" CornerRadius="10" Padding="16"
+                        BorderBrush="{StaticResource VaultWarmBorderSubtle}" BorderThickness="1">
+                    <StackPanel Spacing="8">
                         <TextBlock Text="CONFLICTS" FontSize="11" LetterSpacing="1.5"
                                    Foreground="{StaticResource VaultInkSecondary}"/>
                         <ItemsControl x:Name="ConflictsList">
